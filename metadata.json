@@ -1,0 +1,6 @@
+{
+  "name": "BMI Calculator",
+  "description": "Offline-first Android BMI Calculator with Metric and Imperial units, local history, and light/dark themes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

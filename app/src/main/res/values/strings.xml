@@ -1,0 +1,125 @@
+<resources>
+    <string name="app_name">BMI Calculator</string>
+    <!-- Start.io (StartApp) App ID: replace 205489527 with your own Start.io App ID -->
+    <string name="startio_app_id" translatable="false">205489527</string>
+
+    <!-- Navigation -->
+    <string name="nav_calculator">Calculator</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+    <string name="cd_back">Navigate back</string>
+
+    <!-- Screen 01: Calculator -->
+    <string name="unit_metric">Metric</string>
+    <string name="unit_imperial">Imperial</string>
+    <string name="label_height_cm">Height (cm)</string>
+    <string name="label_height_ft">Feet (ft)</string>
+    <string name="label_height_in">Inches (in)</string>
+    <string name="label_weight_kg">Weight (kg)</string>
+    <string name="label_weight_lb">Weight (lb)</string>
+    <string name="label_age_optional">Age (Optional)</string>
+    <string name="label_gender_optional">Gender (Optional)</string>
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="gender_unspecified">Unspecified</string>
+    <string name="suffix_cm">cm</string>
+    <string name="suffix_ft">ft</string>
+    <string name="suffix_in">in</string>
+    <string name="suffix_kg">kg</string>
+    <string name="suffix_lb">lb</string>
+    <string name="suffix_yrs">yrs</string>
+    <string name="action_calculate_bmi">Calculate BMI</string>
+    <string name="action_reset">Reset</string>
+
+    <!-- Validation -->
+    <string name="error_height_required">Enter height</string>
+    <string name="error_height_range_metric">Height must be 50–280 cm</string>
+    <string name="error_height_range_imperial">Height must be 20–110 in total</string>
+    <string name="error_inches_range">Inches must be 0–11.9</string>
+    <string name="error_weight_required">Enter weight</string>
+    <string name="error_weight_range_metric">Weight must be 10–500 kg</string>
+    <string name="error_weight_range_imperial">Weight must be 22–1100 lb</string>
+    <string name="error_age_range">Age must be 2–120</string>
+    <string name="error_invalid_number">Enter a valid number</string>
+
+    <!-- Screen 02: Result -->
+    <string name="title_bmi_result">BMI Result</string>
+    <string name="title_previous_result">Previous Result</string>
+    <string name="category_underweight">Underweight</string>
+    <string name="category_normal">Normal</string>
+    <string name="category_overweight">Overweight</string>
+    <string name="category_obese">Obese</string>
+    <string name="healthy_bmi_range_label">Healthy BMI range</string>
+    <string name="healthy_bmi_range_value">18.5 – 24.9</string>
+    <string name="healthy_weight_for_height_label">Healthy weight for your height</string>
+    <string name="bmi_scale_label">BMI Range Indicator</string>
+    <string name="inputs_summary_label">Measurements</string>
+    <string name="label_height">Height</string>
+    <string name="label_weight">Weight</string>
+    <string name="label_age">Age</string>
+    <string name="label_gender">Gender</string>
+    <string name="label_recorded">Recorded</string>
+    <string name="adult_bmi_disclaimer_short">Standard adult BMI categories apply to adults aged 20 and above. Children, teenagers, and pregnancy require different interpretation.</string>
+    <string name="age_under_20_notice">Age entered is under 20. Standard adult BMI categories apply to adults aged 20 and above.</string>
+    <string name="action_save_result">Save Result</string>
+    <string name="action_saved">Saved</string>
+    <string name="action_recalculate">Recalculate</string>
+    <string name="action_delete_record">Delete Record</string>
+    <string name="message_result_saved">BMI result saved to history</string>
+    <string name="result_unavailable_message">No BMI calculation is currently loaded.</string>
+
+    <!-- Screen 03: History -->
+    <string name="title_history">History</string>
+    <string name="action_clear_all">Clear All</string>
+    <string name="history_empty_title">No saved BMI records</string>
+    <string name="history_empty_action">Calculate BMI</string>
+    <string name="dialog_clear_history_title">Clear all history?</string>
+    <string name="dialog_clear_history_message">All locally saved BMI records on this device will be permanently removed.</string>
+    <string name="dialog_delete_record_title">Delete record</string>
+    <string name="dialog_delete_record_message">Are you sure you want to delete?</string>
+    <string name="action_yes">Yes</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_close">Close</string>
+    <string name="message_history_cleared">History cleared</string>
+    <string name="message_record_deleted">Record deleted</string>
+    <string name="cd_delete_record">Delete BMI record</string>
+
+    <!-- Screen 04: Settings -->
+    <string name="title_settings">Settings</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme_label">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_section_units">Units</string>
+    <string name="settings_default_unit_label">Default Measurement Unit</string>
+    <string name="settings_section_data">Data &amp; Privacy</string>
+    <string name="settings_privacy_policy_title">Privacy Policy</string>
+    <string name="settings_about_app_title">About App</string>
+    <string name="settings_terms_conditions_title">Terms &amp; Conditions</string>
+    <string name="settings_privacy_policy_body">All BMI calculations, measurements, saved history records, and app preferences (theme and default units) are stored locally on your device and are not uploaded to our servers.\n\nAdvertising: This app displays ads provided by Start.io. When an internet connection is available, Start.io may collect device and advertising identifiers or usage diagnostics in accordance with Start.io\'s privacy policy to deliver and measure ads. You can clear all locally saved BMI history at any time from the History screen or reset your device advertising ID in Android system settings.</string>
+    <string name="settings_about_app_body">BMI Calculator helps you compute your Body Mass Index using Metric (cm, kg) or Imperial (ft/in, lb) measurements, view healthy weight ranges for your height, and keep a local history of saved calculations.\n\nVersion: %1$s\nStorage: On-device local database</string>
+    <string name="settings_terms_conditions_body">BMI Calculator is provided for general informational and educational purposes only.\n\nBody Mass Index is a screening tool and does not constitute medical advice, diagnosis, or treatment. Standard adult BMI categories apply to adults aged 20 and above and may not accurately reflect body composition for athletes, older adults, pregnant individuals, or children and teenagers.\n\nAlways consult a qualified healthcare professional before making health, diet, or exercise decisions.</string>
+    <string name="settings_section_app">Application</string>
+    <string name="settings_version_label">App Version</string>
+
+    <!-- BMI Calculation Methodology Container -->
+    <string name="about_methodology_section">BMI Calculation Methodology</string>
+    <string name="methodology_overview">Body Mass Index (BMI) is a screening measure calculated offline on your device using your height and weight.</string>
+    <string name="about_metric_formula_label">Metric Formula</string>
+    <string name="about_metric_formula">BMI = Weight (kg) ÷ Height (m)²</string>
+    <string name="methodology_metric_note">Height in centimeters is converted to meters (cm ÷ 100) before squaring.</string>
+    <string name="about_imperial_formula_label">Imperial Formula</string>
+    <string name="about_imperial_formula">BMI = (Weight (lb) × 703) ÷ Height (in)²</string>
+    <string name="methodology_imperial_note">Total height in inches is calculated as (feet × 12) + inches.</string>
+    <string name="about_categories_label">Adult Categories (20+ years)</string>
+    <string name="about_cat_underweight_range">Below 18.5</string>
+    <string name="about_cat_normal_range">18.5 – 24.9</string>
+    <string name="about_cat_overweight_range">25.0 – 29.9</string>
+    <string name="about_cat_obese_range">30.0 or above</string>
+    <string name="methodology_healthy_weight_label">Healthy Weight Reference</string>
+    <string name="methodology_healthy_weight_note">The healthy weight range for your height is derived by solving the BMI formula for values between 18.5 and 24.9.</string>
+    <string name="methodology_disclaimer_title">Disclaimer &amp; Limitations</string>
+    <string name="methodology_disclaimer_body">Standard adult BMI categories apply to adults aged 20 and above. BMI is a general screening indicator and does not directly measure body fat percentage, muscle mass, fat distribution, or bone density. Athletes and muscular individuals, older adults, pregnant or nursing individuals, and children or teenagers (who require age- and sex-specific BMI-for-age percentiles) require different clinical interpretation. This application is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment.</string>
+</resources>
