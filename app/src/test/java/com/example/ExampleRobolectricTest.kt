@@ -45,7 +45,7 @@ class ExampleRobolectricTest {
     composeTestRule.waitForIdle()
 
     // No real-time BMI preview appears before clicking Calculate BMI
-    assertEquals(0, composeTestRule.onAllNodesWithText("22.9").fetchSemanticsNodes().size)
+    assertEquals(0, composeTestRule.onAllNodesWithText("22.86").fetchSemanticsNodes().size)
     assertEquals(0, composeTestRule.onAllNodesWithText("Instant BMI").fetchSemanticsNodes().size)
 
     // Calculate BMI -> navigates to Result screen
@@ -53,7 +53,7 @@ class ExampleRobolectricTest {
     composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag("result_bmi_value").assertIsDisplayed()
-    composeTestRule.onNodeWithText("22.9").assertIsDisplayed()
+    composeTestRule.onNodeWithText("22.86").assertIsDisplayed()
     composeTestRule.onNodeWithTag("save_result_button").performScrollTo().performClick()
     composeTestRule.waitForIdle()
 
@@ -63,9 +63,9 @@ class ExampleRobolectricTest {
 
     composeTestRule.onNodeWithTag("nav_history").performClick()
     composeTestRule.waitUntil(timeoutMillis = 5_000) {
-      composeTestRule.onAllNodesWithText("22.9").fetchSemanticsNodes().isNotEmpty()
+      composeTestRule.onAllNodesWithText("22.86").fetchSemanticsNodes().isNotEmpty()
     }
-    composeTestRule.onNodeWithText("22.9").assertIsDisplayed()
+    composeTestRule.onNodeWithText("22.86").assertIsDisplayed()
 
     // Navigate to Settings -> verify link containers and BMI Calculation Methodology container
     composeTestRule.onNodeWithTag("nav_settings").performClick()
@@ -129,11 +129,11 @@ class ExampleRobolectricTest {
     // Open History tab
     composeTestRule.onNodeWithTag("nav_history").performClick()
     composeTestRule.waitUntil(timeoutMillis = 5_000) {
-      composeTestRule.onAllNodesWithText("25.0").fetchSemanticsNodes().isNotEmpty()
+      composeTestRule.onAllNodesWithText("25.00").fetchSemanticsNodes().isNotEmpty()
     }
 
     // Open saved record and check delete confirmation from Result screen
-    composeTestRule.onNodeWithText("25.0").performClick()
+    composeTestRule.onNodeWithText("25.00").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("result_delete_button").performClick()
     composeTestRule.waitForIdle()
@@ -171,7 +171,7 @@ class ExampleRobolectricTest {
         .fetchSemanticsNodes()
         .size == countBeforeDelete - 1
     }
-    composeTestRule.onAllNodesWithText("25.0").fetchSemanticsNodes().also { nodes ->
+    composeTestRule.onAllNodesWithText("25.00").fetchSemanticsNodes().also { nodes ->
       assertEquals(0, nodes.size)
     }
   }

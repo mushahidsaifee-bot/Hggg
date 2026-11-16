@@ -182,6 +182,8 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.startapp.sdk.ads.banner.Banner
 import com.startapp.sdk.ads.banner.BannerListener
 import com.startapp.sdk.adsbase.Ad
@@ -189,10 +191,13 @@ import com.startapp.sdk.adsbase.StartAppAd
 import com.startapp.sdk.adsbase.StartAppSDK
 import com.startapp.sdk.adsbase.adlisteners.AdDisplayListener
 import com.startapp.sdk.adsbase.adlisteners.AdEventListener
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -619,7 +624,7 @@ data class BmiCalculation(
   val unitSystem: UnitSystem,
   val heightCm: Double,
   val weightKg: Double,
-  val feet: Int,
+  val feet: Double,
   val inches: Double,
   val weightLb: Double,
   val healthyMinKg: Double,
@@ -692,60 +697,54 @@ object BmiCalculator {
   const val MIN_AGE = 2
   const val MAX_AGE = 120
 
-  fun roundOneDecimal(value: Double): Double = (value * 10.0).roundToInt() / 10.0
-
   fun calculateMetricBmi(heightCm: Double, weightKg: Double): Double {
-    val heightMeters = heightCm / 100.0
-    return roundOneDecimal(weightKg / (heightMeters * heightMeters))
+    return (weightKg * 10000.0) / (heightCm * heightCm)
   }
 
   fun calculateImperialBmi(heightInches: Double, weightLb: Double): Double {
-    return roundOneDecimal((weightLb * IMPERIAL_FACTOR) / (heightInches * heightInches))
+    return (weightLb * IMPERIAL_FACTOR) / (heightInches * heightInches)
   }
 
   fun categorize(bmi: Double): BmiCategory {
-    val rounded = roundOneDecimal(bmi)
     return when {
-      rounded < 18.5 -> BmiCategory.UNDERWEIGHT
-      rounded < 25.0 -> BmiCategory.NORMAL
-      rounded < 30.0 -> BmiCategory.OVERWEIGHT
-      rounded < 35.0 -> BmiCategory.OBESITY_CLASS_1
-      rounded < 40.0 -> BmiCategory.OBESITY_CLASS_2
+      bmi < 18.5 -> BmiCategory.UNDERWEIGHT
+      bmi < 25.0 -> BmiCategory.NORMAL
+      bmi < 30.0 -> BmiCategory.OVERWEIGHT
+      bmi < 35.0 -> BmiCategory.OBESITY_CLASS_1
+      bmi < 40.0 -> BmiCategory.OBESITY_CLASS_2
       else -> BmiCategory.OBESITY_CLASS_3
     }
   }
 
   fun healthyWeightRangeKg(heightCm: Double): Pair<Double, Double> {
-    val heightMeters = heightCm / 100.0
-    val m2 = heightMeters * heightMeters
-    return roundOneDecimal(18.5 * m2) to roundOneDecimal(24.9 * m2)
+    val cm2 = heightCm * heightCm
+    return ((18.5 * cm2) / 10000.0) to ((24.9 * cm2) / 10000.0)
   }
 
   fun healthyWeightRangeLb(heightInches: Double): Pair<Double, Double> {
     val in2 = heightInches * heightInches
-    return roundOneDecimal((18.5 * in2) / IMPERIAL_FACTOR) to
-      roundOneDecimal((24.9 * in2) / IMPERIAL_FACTOR)
+    return ((18.5 * in2) / IMPERIAL_FACTOR) to ((24.9 * in2) / IMPERIAL_FACTOR)
   }
 
-  fun cmToFeetInches(cm: Double): Pair<Int, Double> {
+  fun cmToFeetInches(cm: Double): Pair<Double, Double> {
     val totalInches = cm / CM_PER_INCH
-    var feet = (totalInches / 12.0).toInt()
-    var inches = roundOneDecimal(totalInches - feet * 12.0)
+    var feet = floor(totalInches / 12.0)
+    var inches = (totalInches - feet * 12.0).coerceAtLeast(0.0)
     if (inches >= 12.0) {
-      feet += 1
-      inches = 0.0
+      feet += 1.0
+      inches -= 12.0
     }
     return feet to inches
   }
 
-  fun feetInchesToCm(feet: Int, inches: Double): Double {
+  fun feetInchesToCm(feet: Double, inches: Double): Double {
     val totalInches = feet * 12.0 + inches
-    return roundOneDecimal(totalInches * CM_PER_INCH)
+    return totalInches * CM_PER_INCH
   }
 
-  fun kgToLb(kg: Double): Double = roundOneDecimal(kg / KG_PER_LB)
+  fun kgToLb(kg: Double): Double = kg / KG_PER_LB
 
-  fun lbToKg(lb: Double): Double = roundOneDecimal(lb * KG_PER_LB)
+  fun lbToKg(lb: Double): Double = lb * KG_PER_LB
 
   fun validateAndCalculate(
     unitSystem: UnitSystem,
@@ -763,7 +762,7 @@ object BmiCalculator {
     var ageError: AgeValidationError? = null
 
     var heightCm = 0.0
-    var feet = 0
+    var feet = 0.0
     var inches = 0.0
 
     when (unitSystem) {
@@ -791,10 +790,12 @@ object BmiCalculator {
         if (trimmedFeet.isEmpty() && trimmedInches.isEmpty()) {
           heightError = HeightValidationError.Required
         } else {
-          val parsedFeet = if (trimmedFeet.isEmpty()) 0 else trimmedFeet.toIntOrNull()
+          val parsedFeet = if (trimmedFeet.isEmpty()) 0.0 else trimmedFeet.toDoubleOrNull()
           val parsedInches = if (trimmedInches.isEmpty()) 0.0 else trimmedInches.toDoubleOrNull()
 
-          if (parsedFeet == null || parsedFeet < 0) {
+          if (
+            parsedFeet == null || parsedFeet.isNaN() || parsedFeet.isInfinite() || parsedFeet < 0.0
+          ) {
             heightError = HeightValidationError.InvalidNumber
           }
           if (parsedInches == null || parsedInches.isNaN() || parsedInches.isInfinite()) {
@@ -906,20 +907,22 @@ object BmiCalculator {
 }
 
 object BmiFormatters {
-  fun formatBmi(bmi: Double): String = String.format(Locale.US, "%.1f", bmi)
+  fun formatBmi(bmi: Double): String {
+    if (!bmi.isFinite()) return "0.00"
+    return BigDecimal.valueOf(bmi).setScale(2, RoundingMode.HALF_UP).toPlainString()
+  }
 
   fun formatDecimal(value: Double): String {
-    return if (value % 1.0 == 0.0) {
-      value.toInt().toString()
-    } else {
-      String.format(Locale.US, "%.1f", value)
-    }
+    if (!value.isFinite()) return "0"
+    val scaled = BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP)
+    if (scaled.compareTo(BigDecimal.ZERO) == 0) return "0"
+    return scaled.stripTrailingZeros().toPlainString()
   }
 
   fun formatHeight(calc: BmiCalculation): String =
     when (calc.unitSystem) {
       UnitSystem.METRIC -> "${formatDecimal(calc.heightCm)} cm"
-      UnitSystem.IMPERIAL -> "${calc.feet} ft ${formatDecimal(calc.inches)} in"
+      UnitSystem.IMPERIAL -> "${formatDecimal(calc.feet)} ft ${formatDecimal(calc.inches)} in"
     }
 
   fun formatWeight(calc: BmiCalculation): String =
@@ -1013,7 +1016,7 @@ data class BmiRecordEntity(
   val unitSystem: String,
   val heightCm: Double,
   val weightKg: Double,
-  val feet: Int,
+  val feet: Double,
   val inches: Double,
   val weightLb: Double,
   val age: Int?,
@@ -1090,12 +1093,50 @@ interface BmiRecordDao {
   suspend fun deleteAllRecords()
 }
 
-@Database(entities = [BmiRecordEntity::class], version = 1, exportSchema = false)
+@Database(entities = [BmiRecordEntity::class], version = 2, exportSchema = false)
 abstract class BmiDatabase : RoomDatabase() {
   abstract fun bmiRecordDao(): BmiRecordDao
 
   companion object {
     @Volatile private var INSTANCE: BmiDatabase? = null
+
+    private val MIGRATION_1_2 =
+      object : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+          db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `bmi_records_new` (
+              `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+              `bmi` REAL NOT NULL,
+              `category` TEXT NOT NULL,
+              `unitSystem` TEXT NOT NULL,
+              `heightCm` REAL NOT NULL,
+              `weightKg` REAL NOT NULL,
+              `feet` REAL NOT NULL,
+              `inches` REAL NOT NULL,
+              `weightLb` REAL NOT NULL,
+              `age` INTEGER,
+              `gender` TEXT NOT NULL,
+              `timestampMillis` INTEGER NOT NULL
+            )
+            """.trimIndent()
+          )
+          db.execSQL(
+            """
+            INSERT INTO `bmi_records_new` (
+              `id`, `bmi`, `category`, `unitSystem`, `heightCm`, `weightKg`,
+              `feet`, `inches`, `weightLb`, `age`, `gender`, `timestampMillis`
+            )
+            SELECT
+              `id`, `bmi`, `category`, `unitSystem`, `heightCm`, `weightKg`,
+              CAST(`feet` AS REAL), `inches`, `weightLb`, `age`, `gender`, `timestampMillis`
+            FROM `bmi_records`
+            """.trimIndent()
+          )
+          db.execSQL("DROP TABLE `bmi_records`")
+          db.execSQL("ALTER TABLE `bmi_records_new` RENAME TO `bmi_records`")
+        }
+      }
 
     fun getInstance(context: Context): BmiDatabase {
       return INSTANCE
@@ -1106,6 +1147,7 @@ abstract class BmiDatabase : RoomDatabase() {
                 BmiDatabase::class.java,
                 "bmi_calculator_db",
               )
+              .addMigrations(MIGRATION_1_2)
               .build()
               .also { INSTANCE = it }
         }
@@ -1335,9 +1377,16 @@ class BmiViewModel(private val repository: BmiRepository) : ViewModel() {
     if (current.unitSystem == UnitSystem.METRIC && newUnit == UnitSystem.IMPERIAL) {
       val cm = current.heightCmInput.trim().toDoubleOrNull()
       if (cm != null && cm in BmiCalculator.MIN_HEIGHT_CM..BmiCalculator.MAX_HEIGHT_CM) {
-        val (ft, inch) = BmiCalculator.cmToFeetInches(cm)
-        newFeet = ft.toString()
-        newInches = BmiFormatters.formatDecimal(inch)
+        val (rawFt, rawInch) = BmiCalculator.cmToFeetInches(cm)
+        var ft = rawFt
+        var roundedInch =
+          BigDecimal.valueOf(rawInch).setScale(2, RoundingMode.HALF_UP).toDouble()
+        if (roundedInch >= 12.0) {
+          ft += 1.0
+          roundedInch = 0.0
+        }
+        newFeet = BmiFormatters.formatDecimal(ft)
+        newInches = BmiFormatters.formatDecimal(roundedInch)
       } else {
         newFeet = ""
         newInches = ""
@@ -1350,10 +1399,22 @@ class BmiViewModel(private val repository: BmiRepository) : ViewModel() {
           ""
         }
     } else if (current.unitSystem == UnitSystem.IMPERIAL && newUnit == UnitSystem.METRIC) {
-      val ft = current.feetInput.trim().toIntOrNull()
+      val ft =
+        if (current.feetInput.isBlank()) 0.0 else current.feetInput.trim().toDoubleOrNull()
       val inch =
         if (current.inchesInput.isBlank()) 0.0 else current.inchesInput.trim().toDoubleOrNull()
-      if (ft != null && inch != null && inch >= 0.0 && inch < 12.0) {
+      if (
+        (current.feetInput.isNotBlank() || current.inchesInput.isNotBlank()) &&
+          ft != null &&
+          !ft.isNaN() &&
+          !ft.isInfinite() &&
+          ft >= 0.0 &&
+          inch != null &&
+          !inch.isNaN() &&
+          !inch.isInfinite() &&
+          inch >= 0.0 &&
+          inch < 12.0
+      ) {
         val totalIn = ft * 12.0 + inch
         newHeightCm =
           if (totalIn in BmiCalculator.MIN_HEIGHT_IN..BmiCalculator.MAX_HEIGHT_IN) {
@@ -1391,7 +1452,7 @@ class BmiViewModel(private val repository: BmiRepository) : ViewModel() {
   }
 
   fun onFeetChanged(value: String) {
-    val filtered = value.filter { it.isDigit() }.take(1)
+    val filtered = sanitizeDecimalInput(value)
     updateCalculatorInputs(_calculatorState.value.copy(feetInput = filtered))
   }
 
@@ -1588,12 +1649,12 @@ class BmiViewModel(private val repository: BmiRepository) : ViewModel() {
     for (ch in raw) {
       if (ch.isDigit()) {
         sb.append(ch)
-      } else if (ch == '.' && !dotSeen) {
+      } else if ((ch == '.' || ch == ',') && !dotSeen) {
         dotSeen = true
-        sb.append(ch)
+        sb.append('.')
       }
     }
-    return sb.toString().take(6)
+    return sb.toString().take(8)
   }
 
   companion object {
@@ -2928,7 +2989,7 @@ fun CalculatorScreen(
                 colors = fieldColors,
                 keyboardOptions =
                   KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
+                    keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Next,
                   ),
                 shape = RoundedCornerShape(12.dp),

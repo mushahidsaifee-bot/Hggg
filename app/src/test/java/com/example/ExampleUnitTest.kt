@@ -20,27 +20,42 @@ class ExampleUnitTest {
   @Test
   fun metricBmi_calculatesAndCategorizesCorrectly() {
     val normal = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 70.0)
-    assertEquals(22.9, normal, 0.01)
+    assertEquals(22.857142857142858, normal, 0.0001)
+    assertEquals("22.86", BmiFormatters.formatBmi(normal))
     assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(normal))
 
+    // Verify exact Double threshold without premature rounding (76.5 / 1.75^2 = 24.97959... < 25.0)
+    val borderlineNormal = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 76.5)
+    assertEquals(24.979591836734695, borderlineNormal, 0.0001)
+    assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(borderlineNormal))
+
+    // Verify exact 25.0 boundaries without 1.6 / 1.7 binary division drift
+    val exactBoundary160 = BmiCalculator.calculateMetricBmi(heightCm = 160.0, weightKg = 64.0)
+    assertEquals(25.0, exactBoundary160, 0.0)
+    assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(exactBoundary160))
+
+    val exactBoundary170 = BmiCalculator.calculateMetricBmi(heightCm = 170.0, weightKg = 72.25)
+    assertEquals(25.0, exactBoundary170, 0.0)
+    assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(exactBoundary170))
+
     val underweight = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 50.0)
-    assertEquals(16.3, underweight, 0.01)
+    assertEquals(16.3265306122449, underweight, 0.0001)
     assertEquals(BmiCategory.UNDERWEIGHT, BmiCalculator.categorize(underweight))
 
     val overweight = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 80.0)
-    assertEquals(26.1, overweight, 0.01)
+    assertEquals(26.122448979591837, overweight, 0.0001)
     assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(overweight))
 
     val obesityClass1 = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 100.0)
-    assertEquals(32.7, obesityClass1, 0.01)
+    assertEquals(32.6530612244898, obesityClass1, 0.0001)
     assertEquals(BmiCategory.OBESITY_CLASS_1, BmiCalculator.categorize(obesityClass1))
 
     val obesityClass2 = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 112.5)
-    assertEquals(36.7, obesityClass2, 0.01)
+    assertEquals(36.734693877551024, obesityClass2, 0.0001)
     assertEquals(BmiCategory.OBESITY_CLASS_2, BmiCalculator.categorize(obesityClass2))
 
     val obesityClass3 = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 130.0)
-    assertEquals(42.4, obesityClass3, 0.01)
+    assertEquals(42.44897959183673, obesityClass3, 0.0001)
     assertEquals(BmiCategory.OBESITY_CLASS_3, BmiCalculator.categorize(obesityClass3))
 
     assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(29.9))
@@ -58,7 +73,7 @@ class ExampleUnitTest {
         unitSystem = UnitSystem.METRIC.name,
         heightCm = 175.0,
         weightKg = 111.0,
-        feet = 5,
+        feet = 5.0,
         inches = 8.9,
         weightLb = 244.7,
         age = null,
@@ -70,10 +85,31 @@ class ExampleUnitTest {
 
   @Test
   fun imperialBmi_calculatesCorrectly() {
-    // 5 ft 10 in = 70 in, 160 lb -> (160 * 703) / 4900 = 22.955 -> 23.0
+    // 5 ft 10 in = 70 in, 160 lb -> (160 * 703) / 4900 = 22.9551...
     val bmi = BmiCalculator.calculateImperialBmi(heightInches = 70.0, weightLb = 160.0)
-    assertEquals(23.0, bmi, 0.01)
+    assertEquals(22.955102040816328, bmi, 0.0001)
     assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(bmi))
+  }
+
+  @Test
+  fun conversionsAndFormatters_preserveExactDoubleAccuracy() {
+    val (minKg160, maxKg160) = BmiCalculator.healthyWeightRangeKg(160.0)
+    assertEquals(47.36, minKg160, 0.0)
+    assertEquals(63.744, maxKg160, 0.000001)
+
+    val cmRoundTrip =
+      BmiCalculator.cmToFeetInches(175.0).let { (ft, inch) ->
+        BmiCalculator.feetInchesToCm(ft, inch)
+      }
+    assertEquals(175.0, cmRoundTrip, 1e-9)
+
+    val kgRoundTrip = BmiCalculator.lbToKg(BmiCalculator.kgToLb(72.35))
+    assertEquals(72.35, kgRoundTrip, 1e-9)
+
+    assertEquals("0", BmiFormatters.formatDecimal(-0.0))
+    assertEquals("50", BmiFormatters.formatDecimal(50.0))
+    assertEquals("2.69", BmiFormatters.formatDecimal(2.685))
+    assertEquals("22.86", BmiFormatters.formatBmi(22.857142857142858))
   }
 
   @Test
@@ -122,10 +158,27 @@ class ExampleUnitTest {
       )
     assertTrue(result.isValid)
     assertNotNull(result.calculation)
-    assertEquals(22.7, result.calculation!!.bmi, 0.01)
+    assertEquals(22.739340474690192, result.calculation!!.bmi, 0.0001)
     assertEquals(BmiCategory.NORMAL, result.calculation!!.category)
     assertEquals(30, result.calculation!!.age)
     assertEquals(GenderOption.FEMALE, result.calculation!!.gender)
+
+    val decimalFeet =
+      BmiCalculator.validateAndCalculate(
+        unitSystem = UnitSystem.IMPERIAL,
+        heightCmText = "",
+        feetText = "5.5",
+        inchesText = "",
+        weightText = "150.5",
+        ageText = "",
+        gender = GenderOption.UNSPECIFIED,
+      )
+    assertTrue(decimalFeet.isValid)
+    assertNotNull(decimalFeet.calculation)
+    assertEquals(5.5, decimalFeet.calculation!!.feet, 0.0001)
+    assertEquals(167.64, decimalFeet.calculation!!.heightCm, 0.0001)
+    assertEquals(24.28868227731864, decimalFeet.calculation!!.bmi, 0.0001)
+    assertEquals("5.5 ft 0 in", BmiFormatters.formatHeight(decimalFeet.calculation!!))
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
