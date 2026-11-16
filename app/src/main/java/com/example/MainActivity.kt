@@ -608,7 +608,9 @@ enum class BmiCategory {
   UNDERWEIGHT,
   NORMAL,
   OVERWEIGHT,
-  OBESE,
+  OBESITY_CLASS_1,
+  OBESITY_CLASS_2,
+  OBESITY_CLASS_3,
 }
 
 data class BmiCalculation(
@@ -707,7 +709,9 @@ object BmiCalculator {
       rounded < 18.5 -> BmiCategory.UNDERWEIGHT
       rounded < 25.0 -> BmiCategory.NORMAL
       rounded < 30.0 -> BmiCategory.OVERWEIGHT
-      else -> BmiCategory.OBESE
+      rounded < 35.0 -> BmiCategory.OBESITY_CLASS_1
+      rounded < 40.0 -> BmiCategory.OBESITY_CLASS_2
+      else -> BmiCategory.OBESITY_CLASS_3
     }
   }
 
@@ -954,7 +958,9 @@ object BmiFormatters {
       BmiCategory.UNDERWEIGHT -> context.getString(R.string.category_underweight)
       BmiCategory.NORMAL -> context.getString(R.string.category_normal)
       BmiCategory.OVERWEIGHT -> context.getString(R.string.category_overweight)
-      BmiCategory.OBESE -> context.getString(R.string.category_obese)
+      BmiCategory.OBESITY_CLASS_1 -> context.getString(R.string.category_obesity_class_1)
+      BmiCategory.OBESITY_CLASS_2 -> context.getString(R.string.category_obesity_class_2)
+      BmiCategory.OBESITY_CLASS_3 -> context.getString(R.string.category_obesity_class_3)
     }
 
   fun genderLabel(context: Context, gender: GenderOption): String =
@@ -1659,12 +1665,16 @@ val ErrorDark = Color(0xFFF87171)
 val BmiUnderweightLight = Color(0xFF0284C7)
 val BmiNormalLight = Color(0xFF0D9488)
 val BmiOverweightLight = Color(0xFFD97706)
-val BmiObeseLight = Color(0xFFDC2626)
+val BmiObesityClass1Light = Color(0xFFEA580C)
+val BmiObesityClass2Light = Color(0xFFDC2626)
+val BmiObesityClass3Light = Color(0xFF991B1B)
 
 val BmiUnderweightDark = Color(0xFF38BDF8)
 val BmiNormalDark = Color(0xFF2DD4BF)
 val BmiOverweightDark = Color(0xFFFBBF24)
-val BmiObeseDark = Color(0xFFF87171)
+val BmiObesityClass1Dark = Color(0xFFFB923C)
+val BmiObesityClass2Dark = Color(0xFFF87171)
+val BmiObesityClass3Dark = Color(0xFFF43F5E)
 
 val AppTypography =
   MaterialTypography(
@@ -1817,14 +1827,18 @@ data class BmiCategoryColors(
   val underweight: Color,
   val normal: Color,
   val overweight: Color,
-  val obese: Color,
+  val obesityClass1: Color,
+  val obesityClass2: Color,
+  val obesityClass3: Color,
 ) {
   fun colorFor(category: BmiCategory): Color =
     when (category) {
       BmiCategory.UNDERWEIGHT -> underweight
       BmiCategory.NORMAL -> normal
       BmiCategory.OVERWEIGHT -> overweight
-      BmiCategory.OBESE -> obese
+      BmiCategory.OBESITY_CLASS_1 -> obesityClass1
+      BmiCategory.OBESITY_CLASS_2 -> obesityClass2
+      BmiCategory.OBESITY_CLASS_3 -> obesityClass3
     }
 }
 
@@ -1833,7 +1847,9 @@ val LocalBmiCategoryColors = staticCompositionLocalOf {
     underweight = BmiUnderweightLight,
     normal = BmiNormalLight,
     overweight = BmiOverweightLight,
-    obese = BmiObeseLight,
+    obesityClass1 = BmiObesityClass1Light,
+    obesityClass2 = BmiObesityClass2Light,
+    obesityClass3 = BmiObesityClass3Light,
   )
 }
 
@@ -1879,14 +1895,18 @@ fun BmiCalculatorTheme(
         underweight = BmiUnderweightDark,
         normal = BmiNormalDark,
         overweight = BmiOverweightDark,
-        obese = BmiObeseDark,
+        obesityClass1 = BmiObesityClass1Dark,
+        obesityClass2 = BmiObesityClass2Dark,
+        obesityClass3 = BmiObesityClass3Dark,
       )
     } else {
       BmiCategoryColors(
         underweight = BmiUnderweightLight,
         normal = BmiNormalLight,
         overweight = BmiOverweightLight,
-        obese = BmiObeseLight,
+        obesityClass1 = BmiObesityClass1Light,
+        obesityClass2 = BmiObesityClass2Light,
+        obesityClass3 = BmiObesityClass3Light,
       )
     }
 
@@ -2478,6 +2498,7 @@ fun BmiCategoryBadge(
       style = MaterialTheme.typography.labelLarge,
       fontWeight = FontWeight.SemiBold,
       color = categoryColor,
+      textAlign = TextAlign.Center,
       modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
     )
   }
@@ -2500,7 +2521,7 @@ fun BmiRangeIndicator(
       BmiFormatters.categoryLabel(context, category)
 
   val minScale = 12.0f
-  val maxScale = 40.0f
+  val maxScale = 45.0f
   val span = maxScale - minScale
   val clampedBmi = bmi.toFloat().coerceIn(minScale, maxScale)
   val targetFraction = (clampedBmi - minScale) / span
@@ -2520,18 +2541,22 @@ fun BmiRangeIndicator(
     Canvas(modifier = Modifier.fillMaxWidth().height(28.dp)) {
       val barHeight = 10.dp.toPx()
       val barTop = (size.height - barHeight) / 2f
-      val gap = 3.dp.toPx()
+      val gap = 2.5.dp.toPx()
       val corner = CornerRadius(4.dp.toPx(), 4.dp.toPx())
 
       val f1 = (18.5f - minScale) / span
       val f2 = (25.0f - minScale) / span
       val f3 = (30.0f - minScale) / span
+      val f4 = (35.0f - minScale) / span
+      val f5 = (40.0f - minScale) / span
 
       val x0 = 0f
       val x1 = size.width * f1
       val x2 = size.width * f2
       val x3 = size.width * f3
-      val x4 = size.width
+      val x4 = size.width * f4
+      val x5 = size.width * f5
+      val x6 = size.width
 
       drawRoundRect(
         color = categoryColors.underweight,
@@ -2552,9 +2577,21 @@ fun BmiRangeIndicator(
         cornerRadius = corner,
       )
       drawRoundRect(
-        color = categoryColors.obese,
+        color = categoryColors.obesityClass1,
         topLeft = Offset(x3 + gap / 2f, barTop),
-        size = Size((x4 - x3 - gap / 2f).coerceAtLeast(0f), barHeight),
+        size = Size((x4 - x3 - gap).coerceAtLeast(0f), barHeight),
+        cornerRadius = corner,
+      )
+      drawRoundRect(
+        color = categoryColors.obesityClass2,
+        topLeft = Offset(x4 + gap / 2f, barTop),
+        size = Size((x5 - x4 - gap).coerceAtLeast(0f), barHeight),
+        cornerRadius = corner,
+      )
+      drawRoundRect(
+        color = categoryColors.obesityClass3,
+        topLeft = Offset(x5 + gap / 2f, barTop),
+        size = Size((x6 - x5 - gap / 2f).coerceAtLeast(0f), barHeight),
         cornerRadius = corner,
       )
 
@@ -2579,44 +2616,69 @@ fun BmiRangeIndicator(
         (18.5f - minScale) / span,
         (25.0f - minScale) / span,
         (30.0f - minScale) / span,
+        (35.0f - minScale) / span,
+        (40.0f - minScale) / span,
         1f,
       )
     }
     Layout(
       modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
       content = {
-        Text("12", style = MaterialTheme.typography.labelSmall, color = labelColor)
-        Text("18.5", style = MaterialTheme.typography.labelSmall, color = labelColor)
-        Text("25", style = MaterialTheme.typography.labelSmall, color = labelColor)
-        Text("30", style = MaterialTheme.typography.labelSmall, color = labelColor)
-        Text("40", style = MaterialTheme.typography.labelSmall, color = labelColor)
+        Text("12", style = MaterialTheme.typography.labelSmall, color = labelColor, maxLines = 1)
+        Text("18.5", style = MaterialTheme.typography.labelSmall, color = labelColor, maxLines = 1)
+        Text("25", style = MaterialTheme.typography.labelSmall, color = labelColor, maxLines = 1)
+        Text("30", style = MaterialTheme.typography.labelSmall, color = labelColor, maxLines = 1)
+        Text("35", style = MaterialTheme.typography.labelSmall, color = labelColor, maxLines = 1)
+        Text("40", style = MaterialTheme.typography.labelSmall, color = labelColor, maxLines = 1)
+        Text("45", style = MaterialTheme.typography.labelSmall, color = labelColor, maxLines = 1)
       },
     ) { measurables, constraints ->
       val childConstraints = constraints.copy(minWidth = 0)
       val placeables = measurables.map { it.measure(childConstraints) }
       val maxHeight = placeables.maxOfOrNull { it.height } ?: 0
       val totalWidth = constraints.maxWidth
+      val minGapPx = 4.dp.roundToPx()
+      val endLabelStart = (totalWidth - (placeables.lastOrNull()?.width ?: 0)).coerceAtLeast(0)
+      var lastRight = Int.MIN_VALUE
       layout(totalWidth, maxHeight) {
         placeables.forEachIndexed { index, placeable ->
           val fraction = tickFractions[index]
-          val x =
+          val rawX =
             when (index) {
               0 -> 0
-              placeables.lastIndex -> (totalWidth - placeable.width).coerceAtLeast(0)
+              placeables.lastIndex -> endLabelStart
               else ->
                 ((totalWidth * fraction) - (placeable.width / 2f))
                   .roundToInt()
                   .coerceIn(0, (totalWidth - placeable.width).coerceAtLeast(0))
             }
-          placeable.placeRelative(x, 0)
+          when (index) {
+            0 -> {
+              if (placeable.width <= totalWidth) {
+                placeable.placeRelative(rawX, 0)
+                lastRight = rawX + placeable.width
+              }
+            }
+            placeables.lastIndex -> {
+              if (rawX >= lastRight + minGapPx) {
+                placeable.placeRelative(rawX, 0)
+              }
+            }
+            else -> {
+              if (rawX >= lastRight + minGapPx && rawX + placeable.width + minGapPx <= endLabelStart) {
+                placeable.placeRelative(rawX, 0)
+                lastRight = rawX + placeable.width
+              }
+            }
+          }
         }
       }
     }
 
     FlowRow(
-      modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalArrangement = Arrangement.spacedBy(6.dp),
+      modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+      horizontalArrangement = Arrangement.spacedBy(12.dp),
+      verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       ScaleLegendDot(
         color = categoryColors.underweight,
@@ -2631,8 +2693,16 @@ fun BmiRangeIndicator(
         label = stringResource(R.string.category_overweight),
       )
       ScaleLegendDot(
-        color = categoryColors.obese,
-        label = stringResource(R.string.category_obese),
+        color = categoryColors.obesityClass1,
+        label = stringResource(R.string.category_obesity_class_1),
+      )
+      ScaleLegendDot(
+        color = categoryColors.obesityClass2,
+        label = stringResource(R.string.category_obesity_class_2),
+      )
+      ScaleLegendDot(
+        color = categoryColors.obesityClass3,
+        label = stringResource(R.string.category_obesity_class_3),
       )
     }
   }
@@ -3456,6 +3526,7 @@ fun HistoryScreen(
   }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun HistoryRecordRow(
   record: BmiRecordEntity,
@@ -3483,17 +3554,21 @@ private fun HistoryRecordRow(
         modifier = Modifier.weight(1f),
         verticalArrangement = Arrangement.spacedBy(4.dp),
       ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
+        FlowRow(
           horizontalArrangement = Arrangement.spacedBy(10.dp),
+          verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
           Text(
             text = BmiFormatters.formatBmi(calc.bmi),
             style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.align(Alignment.CenterVertically),
           )
-          BmiCategoryBadge(category = calc.category)
+          BmiCategoryBadge(
+            category = calc.category,
+            modifier = Modifier.align(Alignment.CenterVertically),
+          )
         }
         Text(
           text = "${BmiFormatters.formatHeight(calc)} · ${BmiFormatters.formatWeight(calc)}",
@@ -3743,8 +3818,16 @@ fun SettingsScreen(
                 category = stringResource(R.string.category_overweight),
               )
               MethodologyCategoryRow(
-                range = stringResource(R.string.about_cat_obese_range),
-                category = stringResource(R.string.category_obese),
+                range = stringResource(R.string.about_cat_obesity_class_1_range),
+                category = stringResource(R.string.category_obesity_class_1),
+              )
+              MethodologyCategoryRow(
+                range = stringResource(R.string.about_cat_obesity_class_2_range),
+                category = stringResource(R.string.category_obesity_class_2),
+              )
+              MethodologyCategoryRow(
+                range = stringResource(R.string.about_cat_obesity_class_3_range),
+                category = stringResource(R.string.category_obesity_class_3),
               )
 
               HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -3910,6 +3993,8 @@ private fun MethodologyCategoryRow(range: String, category: String) {
       style = MaterialTheme.typography.bodyMedium,
       fontWeight = FontWeight.Medium,
       color = MaterialTheme.colorScheme.onSurface,
+      textAlign = TextAlign.End,
+      modifier = Modifier.weight(1f),
     )
   }
 }

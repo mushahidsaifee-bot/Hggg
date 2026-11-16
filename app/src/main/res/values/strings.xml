@@ -48,7 +48,9 @@
     <string name="category_underweight">Underweight</string>
     <string name="category_normal">Normal</string>
     <string name="category_overweight">Overweight</string>
-    <string name="category_obese">Obese</string>
+    <string name="category_obesity_class_1">Obesity Class 1</string>
+    <string name="category_obesity_class_2">Obesity Class 2</string>
+    <string name="category_obesity_class_3">Obesity Class 3</string>
     <string name="healthy_bmi_range_label">Healthy BMI range</string>
     <string name="healthy_bmi_range_value">18.5 – 24.9</string>
     <string name="healthy_weight_for_height_label">Healthy weight for your height</string>
@@ -121,7 +123,9 @@
     <string name="about_cat_underweight_range">Below 18.5</string>
     <string name="about_cat_normal_range">18.5 – 24.9</string>
     <string name="about_cat_overweight_range">25.0 – 29.9</string>
-    <string name="about_cat_obese_range">30.0 or above</string>
+    <string name="about_cat_obesity_class_1_range">30.0 – 34.9</string>
+    <string name="about_cat_obesity_class_2_range">35.0 – 39.9</string>
+    <string name="about_cat_obesity_class_3_range">40.0 or above</string>
     <string name="methodology_healthy_weight_label">Healthy Weight Reference</string>
     <string name="methodology_healthy_weight_note">The healthy weight range for your height is derived by solving the BMI formula for values between 18.5 and 24.9.</string>
     <string name="methodology_disclaimer_title">Disclaimer &amp; Limitations</string>

@@ -31,9 +31,41 @@ class ExampleUnitTest {
     assertEquals(26.1, overweight, 0.01)
     assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(overweight))
 
-    val obese = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 100.0)
-    assertEquals(32.7, obese, 0.01)
-    assertEquals(BmiCategory.OBESE, BmiCalculator.categorize(obese))
+    val obesityClass1 = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 100.0)
+    assertEquals(32.7, obesityClass1, 0.01)
+    assertEquals(BmiCategory.OBESITY_CLASS_1, BmiCalculator.categorize(obesityClass1))
+
+    val obesityClass2 = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 112.5)
+    assertEquals(36.7, obesityClass2, 0.01)
+    assertEquals(BmiCategory.OBESITY_CLASS_2, BmiCalculator.categorize(obesityClass2))
+
+    val obesityClass3 = BmiCalculator.calculateMetricBmi(heightCm = 175.0, weightKg = 130.0)
+    assertEquals(42.4, obesityClass3, 0.01)
+    assertEquals(BmiCategory.OBESITY_CLASS_3, BmiCalculator.categorize(obesityClass3))
+
+    assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(29.9))
+    assertEquals(BmiCategory.OBESITY_CLASS_1, BmiCalculator.categorize(30.0))
+    assertEquals(BmiCategory.OBESITY_CLASS_1, BmiCalculator.categorize(34.9))
+    assertEquals(BmiCategory.OBESITY_CLASS_2, BmiCalculator.categorize(35.0))
+    assertEquals(BmiCategory.OBESITY_CLASS_2, BmiCalculator.categorize(39.9))
+    assertEquals(BmiCategory.OBESITY_CLASS_3, BmiCalculator.categorize(40.0))
+
+    val legacyObeseEntity =
+      BmiRecordEntity(
+        id = 1L,
+        bmi = 36.2,
+        category = "OBESE",
+        unitSystem = UnitSystem.METRIC.name,
+        heightCm = 175.0,
+        weightKg = 111.0,
+        feet = 5,
+        inches = 8.9,
+        weightLb = 244.7,
+        age = null,
+        gender = GenderOption.UNSPECIFIED.name,
+        timestampMillis = 1L,
+      )
+    assertEquals(BmiCategory.OBESITY_CLASS_2, legacyObeseEntity.toBmiCalculation().category)
   }
 
   @Test
