@@ -1,6 +1,7 @@
 package com.example
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -18,6 +19,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -75,16 +77,29 @@ class ExampleRobolectricTest {
       .assertIsDisplayed()
       .performClick()
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("info_dialog_close_button").performClick()
-    composeTestRule.waitForIdle()
+    val privacyIntent = Shadows.shadowOf(composeTestRule.activity).nextStartedActivity
+    assertEquals(Intent.ACTION_VIEW, privacyIntent?.action)
+    assertEquals("https://www.google.com", privacyIntent?.dataString)
+
     composeTestRule
       .onNodeWithTag("settings_about_app_item")
       .performScrollTo()
       .assertIsDisplayed()
+      .performClick()
+    composeTestRule.waitForIdle()
+    val aboutIntent = Shadows.shadowOf(composeTestRule.activity).nextStartedActivity
+    assertEquals(Intent.ACTION_VIEW, aboutIntent?.action)
+    assertEquals("https://www.google.com", aboutIntent?.dataString)
+
     composeTestRule
       .onNodeWithTag("settings_terms_conditions_item")
       .performScrollTo()
       .assertIsDisplayed()
+      .performClick()
+    composeTestRule.waitForIdle()
+    val termsIntent = Shadows.shadowOf(composeTestRule.activity).nextStartedActivity
+    assertEquals(Intent.ACTION_VIEW, termsIntent?.action)
+    assertEquals("https://www.google.com", termsIntent?.dataString)
     composeTestRule
       .onNodeWithTag("settings_methodology_container")
       .performScrollTo()

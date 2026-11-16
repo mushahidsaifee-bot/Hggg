@@ -98,6 +98,10 @@
     <string name="settings_privacy_policy_title">Privacy Policy</string>
     <string name="settings_about_app_title">About App</string>
     <string name="settings_terms_conditions_title">Terms &amp; Conditions</string>
+    <!-- External links for Settings items (replace with your live URLs) -->
+    <string name="url_privacy_policy" translatable="false">https://www.google.com</string>
+    <string name="url_about_app" translatable="false">https://www.google.com</string>
+    <string name="url_terms_conditions" translatable="false">https://www.google.com</string>
     <string name="settings_privacy_policy_body">All BMI calculations, measurements, saved history records, and app preferences (theme and default units) are stored locally on your device and are not uploaded to our servers.\n\nAdvertising: This app displays ads provided by Start.io. When an internet connection is available, Start.io may collect device and advertising identifiers or usage diagnostics in accordance with Start.io\'s privacy policy to deliver and measure ads. You can clear all locally saved BMI history at any time from the History screen or reset your device advertising ID in Android system settings.</string>
     <string name="settings_about_app_body">BMI Calculator helps you compute your Body Mass Index using Metric (cm, kg) or Imperial (ft/in, lb) measurements, view healthy weight ranges for your height, and keep a local history of saved calculations.\n\nVersion: %1$s\nStorage: On-device local database</string>
     <string name="settings_terms_conditions_body">BMI Calculator is provided for general informational and educational purposes only.\n\nBody Mass Index is a screening tool and does not constitute medical advice, diagnosis, or treatment. Standard adult BMI categories apply to adults aged 20 and above and may not accurately reflect body composition for athletes, older adults, pregnant individuals, or children and teenagers.\n\nAlways consult a qualified healthcare professional before making health, diet, or exercise decisions.</string>

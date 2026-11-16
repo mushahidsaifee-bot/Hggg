@@ -3,11 +3,13 @@ package com.example
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -535,7 +537,6 @@ fun BmiAppShell(
                   TopLevelTab.SETTINGS ->
                     SettingsScreen(
                       preferences = preferences,
-                      isTabActive = isSettledActive,
                       onThemeSelected = viewModel::setThemeMode,
                       onDefaultUnitSelected = viewModel::setDefaultUnitSystem,
                     )
@@ -3520,10 +3521,14 @@ private fun HistoryRecordRow(
 
 // region Settings Screen
 
-private enum class SettingsInfoDoc {
-  PRIVACY_POLICY,
-  ABOUT_APP,
-  TERMS_CONDITIONS,
+private fun openExternalUrl(context: Context, url: String) {
+  val intent =
+    Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+      if (context !is Activity) {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+    }
+  runCatching { context.startActivity(intent) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -3533,32 +3538,11 @@ fun SettingsScreen(
   onThemeSelected: (ThemeMode) -> Unit,
   onDefaultUnitSelected: (UnitSystem) -> Unit,
   modifier: Modifier = Modifier,
-  isTabActive: Boolean = true,
 ) {
-  var activeInfoDoc by remember { mutableStateOf<SettingsInfoDoc?>(null) }
-
-  activeInfoDoc?.let { doc ->
-    val title =
-      when (doc) {
-        SettingsInfoDoc.PRIVACY_POLICY -> stringResource(R.string.settings_privacy_policy_title)
-        SettingsInfoDoc.ABOUT_APP -> stringResource(R.string.settings_about_app_title)
-        SettingsInfoDoc.TERMS_CONDITIONS ->
-          stringResource(R.string.settings_terms_conditions_title)
-      }
-    val body =
-      when (doc) {
-        SettingsInfoDoc.PRIVACY_POLICY -> stringResource(R.string.settings_privacy_policy_body)
-        SettingsInfoDoc.ABOUT_APP ->
-          stringResource(R.string.settings_about_app_body, BuildConfig.VERSION_NAME)
-        SettingsInfoDoc.TERMS_CONDITIONS ->
-          stringResource(R.string.settings_terms_conditions_body)
-      }
-    InfoDocumentDialog(
-      title = title,
-      body = body,
-      onDismiss = { activeInfoDoc = null },
-    )
-  }
+  val context = LocalContext.current
+  val privacyPolicyUrl = stringResource(R.string.url_privacy_policy)
+  val aboutAppUrl = stringResource(R.string.url_about_app)
+  val termsConditionsUrl = stringResource(R.string.url_terms_conditions)
 
   Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     TopAppBar(
@@ -3578,13 +3562,8 @@ fun SettingsScreen(
         ),
     )
 
-    var settingsViewportBounds by remember { mutableStateOf<Rect?>(null) }
-
     Box(
-      modifier =
-        Modifier.fillMaxSize()
-          .onGloballyPositioned { settingsViewportBounds = it.boundsInWindow() }
-          .verticalScroll(rememberScrollState()),
+      modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
       contentAlignment = Alignment.TopCenter,
     ) {
       Column(
@@ -3691,21 +3670,21 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_privacy_policy_title),
             icon = Icons.Outlined.Lock,
             testTag = "settings_privacy_policy_item",
-            onClick = { activeInfoDoc = SettingsInfoDoc.PRIVACY_POLICY },
+            onClick = { openExternalUrl(context, privacyPolicyUrl) },
           )
 
           SettingsInfoRow(
             title = stringResource(R.string.settings_about_app_title),
             icon = Icons.Outlined.Info,
             testTag = "settings_about_app_item",
-            onClick = { activeInfoDoc = SettingsInfoDoc.ABOUT_APP },
+            onClick = { openExternalUrl(context, aboutAppUrl) },
           )
 
           SettingsInfoRow(
             title = stringResource(R.string.settings_terms_conditions_title),
             icon = Icons.Outlined.Description,
             testTag = "settings_terms_conditions_item",
-            onClick = { activeInfoDoc = SettingsInfoDoc.TERMS_CONDITIONS },
+            onClick = { openExternalUrl(context, termsConditionsUrl) },
           )
         }
 
@@ -3830,13 +3809,6 @@ fun SettingsScreen(
               )
             }
           }
-          StartIoBannerAd(
-            slotKey = "settings_bottom",
-            topSpacingWhenLoaded = 12.dp,
-            viewportBounds = settingsViewportBounds,
-            isActive = isTabActive,
-            modifier = Modifier.testTag("settings_bottom_banner_ad"),
-          )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
