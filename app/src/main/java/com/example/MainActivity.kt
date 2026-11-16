@@ -23,14 +23,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -136,7 +133,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -325,34 +321,15 @@ fun BmiAppShell(
   val navController = rememberNavController()
 
   var selectedTab by rememberSaveable { mutableStateOf(TopLevelTab.CALCULATOR) }
-  var previousTab by remember { mutableStateOf<TopLevelTab?>(null) }
-  val slideProgress = remember { Animatable(1f) }
-  var containerWidthPx by remember { mutableIntStateOf(0) }
 
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
   val context = LocalContext.current
   val adManager = LocalStartIoAdManager.current
 
-  LaunchedEffect(selectedTab) {
-    val fromTab = previousTab
-    if (fromTab != null && fromTab != selectedTab) {
-      slideProgress.snapTo(0f)
-      slideProgress.animateTo(
-        targetValue = 1f,
-        animationSpec = tween(durationMillis = 125, easing = FastOutSlowInEasing),
-      )
-      previousTab = null
-    } else {
-      slideProgress.snapTo(1f)
-      previousTab = null
-    }
-  }
-
   fun selectTab(tab: TopLevelTab) {
     if (selectedTab != tab) {
       snackbarHostState.currentSnackbarData?.dismiss()
-      previousTab = selectedTab
       selectedTab = tab
     }
   }
@@ -367,24 +344,10 @@ fun BmiAppShell(
   NavHost(
     navController = navController,
     startDestination = BmiRoutes.MAIN_TABS,
-    enterTransition = {
-      slideInHorizontally(
-        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
-        initialOffsetX = { fullWidth -> fullWidth },
-      )
-    },
-    exitTransition = {
-      fadeOut(animationSpec = tween(durationMillis = 150), targetAlpha = 0.99f)
-    },
-    popEnterTransition = {
-      fadeIn(animationSpec = tween(durationMillis = 140), initialAlpha = 0.99f)
-    },
-    popExitTransition = {
-      slideOutHorizontally(
-        animationSpec = tween(durationMillis = 140, easing = FastOutSlowInEasing),
-        targetOffsetX = { fullWidth -> fullWidth },
-      )
-    },
+    enterTransition = { EnterTransition.None },
+    exitTransition = { ExitTransition.None },
+    popEnterTransition = { EnterTransition.None },
+    popExitTransition = { ExitTransition.None },
     modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
   ) {
     composable(BmiRoutes.MAIN_TABS) {
@@ -457,42 +420,23 @@ fun BmiAppShell(
                 Modifier.weight(1f)
                   .fillMaxSize()
                   .clipToBounds()
-                  .background(MaterialTheme.colorScheme.background)
-                  .onSizeChanged { containerWidthPx = it.width },
+                  .background(MaterialTheme.colorScheme.background),
             ) {
               TopLevelTab.entries.forEach { tab ->
                 key(tab) {
                   val isSelected = selectedTab == tab
-                  val fromTab = previousTab
-                  val isOutgoing = fromTab == tab
-                  val forward = fromTab == null || selectedTab.ordinal >= fromTab.ordinal
-                  val isSettledActive = isMainTabsAtTop && isSelected && fromTab == null
+                  val isSettledActive = isMainTabsAtTop && isSelected
 
                   val tabModifier =
                     Modifier.fillMaxSize()
-                      .zIndex(if (isSelected) 1f else if (isOutgoing) 0.5f else 0f)
+                      .zIndex(if (isSelected) 1f else 0f)
                       .graphicsLayer {
-                        val p = slideProgress.value
-                        val w = containerWidthPx.toFloat()
-                        when {
-                          isSelected && fromTab != null -> {
-                            alpha = 1f
-                            translationX =
-                              if (w > 0f) (1f - p) * (if (forward) w else -w) else 0f
-                          }
-                          isSelected -> {
-                            alpha = 1f
-                            translationX = 0f
-                          }
-                          isOutgoing -> {
-                            alpha = 1f
-                            translationX =
-                              if (w > 0f) -p * (if (forward) w * 0.22f else -w * 0.22f) else 0f
-                          }
-                          else -> {
-                            alpha = 0f
-                            translationX = 100_000f
-                          }
+                        if (isSelected) {
+                          alpha = 1f
+                          translationX = 0f
+                        } else {
+                          alpha = 0f
+                          translationX = 100_000f
                         }
                       }
                       .let { base -> if (!isSelected) base.clearAndSetSemantics {} else base }
