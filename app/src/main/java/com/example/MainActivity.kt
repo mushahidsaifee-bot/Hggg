@@ -23,9 +23,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -116,12 +114,12 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
@@ -133,10 +131,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -144,8 +144,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -174,7 +176,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Dao
 import androidx.room.Database
@@ -322,25 +323,36 @@ fun BmiAppShell(
   modifier: Modifier = Modifier,
 ) {
   val navController = rememberNavController()
-  val navBackStackEntry by navController.currentBackStackEntryAsState()
-  val currentRoute = navBackStackEntry?.destination?.route
-
-  val calculatorState by viewModel.calculatorState.collectAsStateWithLifecycle()
-  val resultState by viewModel.resultState.collectAsStateWithLifecycle()
-  val historyRecords by viewModel.historyRecords.collectAsStateWithLifecycle()
-  val preferences by viewModel.userPreferences.collectAsStateWithLifecycle()
 
   var selectedTab by rememberSaveable { mutableStateOf(TopLevelTab.CALCULATOR) }
-  val saveableStateHolder = rememberSaveableStateHolder()
+  var previousTab by remember { mutableStateOf<TopLevelTab?>(null) }
+  val slideProgress = remember { Animatable(1f) }
+  var containerWidthPx by remember { mutableIntStateOf(0) }
 
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
   val context = LocalContext.current
   val adManager = LocalStartIoAdManager.current
 
+  LaunchedEffect(selectedTab) {
+    val fromTab = previousTab
+    if (fromTab != null && fromTab != selectedTab) {
+      slideProgress.snapTo(0f)
+      slideProgress.animateTo(
+        targetValue = 1f,
+        animationSpec = tween(durationMillis = 125, easing = FastOutSlowInEasing),
+      )
+      previousTab = null
+    } else {
+      slideProgress.snapTo(1f)
+      previousTab = null
+    }
+  }
+
   fun selectTab(tab: TopLevelTab) {
     if (selectedTab != tab) {
       snackbarHostState.currentSnackbarData?.dismiss()
+      previousTab = selectedTab
       selectedTab = tab
     }
   }
@@ -357,25 +369,19 @@ fun BmiAppShell(
     startDestination = BmiRoutes.MAIN_TABS,
     enterTransition = {
       slideInHorizontally(
-        animationSpec = tween(durationMillis = 160, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
         initialOffsetX = { fullWidth -> fullWidth },
       )
     },
     exitTransition = {
-      slideOutHorizontally(
-        animationSpec = tween(durationMillis = 160, easing = FastOutSlowInEasing),
-        targetOffsetX = { fullWidth -> -fullWidth / 4 },
-      )
+      fadeOut(animationSpec = tween(durationMillis = 150), targetAlpha = 0.99f)
     },
     popEnterTransition = {
-      slideInHorizontally(
-        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
-        initialOffsetX = { fullWidth -> -fullWidth / 4 },
-      )
+      fadeIn(animationSpec = tween(durationMillis = 140), initialAlpha = 0.99f)
     },
     popExitTransition = {
       slideOutHorizontally(
-        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 140, easing = FastOutSlowInEasing),
         targetOffsetX = { fullWidth -> fullWidth },
       )
     },
@@ -386,7 +392,12 @@ fun BmiAppShell(
         selectTab(TopLevelTab.CALCULATOR)
       }
 
-      val isMainTabsAtTop = currentRoute == BmiRoutes.MAIN_TABS
+      var isMainTabsAtTop by remember { mutableStateOf(true) }
+      LaunchedEffect(navController) {
+        navController.currentBackStackEntryFlow.collect { entry ->
+          isMainTabsAtTop = entry.destination.route == BmiRoutes.MAIN_TABS
+        }
+      }
 
       BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val useNavigationRail = maxWidth >= 600.dp
@@ -441,105 +452,141 @@ fun BmiAppShell(
               }
             }
 
-            AnimatedContent(
-              targetState = selectedTab,
+            Box(
               modifier =
                 Modifier.weight(1f)
                   .fillMaxSize()
                   .clipToBounds()
-                  .background(MaterialTheme.colorScheme.background),
-              transitionSpec = {
-                val forward = targetState.ordinal >= initialState.ordinal
-                val animSpec = tween<IntOffset>(durationMillis = 140, easing = FastOutSlowInEasing)
-                ContentTransform(
-                  targetContentEnter =
-                    slideInHorizontally(
-                      animationSpec = animSpec,
-                      initialOffsetX = { fullWidth -> if (forward) fullWidth else -fullWidth },
-                    ),
-                  initialContentExit =
-                    slideOutHorizontally(
-                      animationSpec = animSpec,
-                      targetOffsetX = { fullWidth -> if (forward) -fullWidth else fullWidth },
-                    ),
-                  targetContentZIndex = if (forward) 1f else 0f,
-                  sizeTransform = SizeTransform(clip = true),
-                )
-              },
-              label = "main_tab_transition",
-            ) { tab ->
-              val isSettledActive = isMainTabsAtTop && selectedTab == tab && !transition.isRunning
-              saveableStateHolder.SaveableStateProvider(tab.name) {
-                when (tab) {
-                  TopLevelTab.CALCULATOR ->
-                    CalculatorScreen(
-                      state = calculatorState,
-                      onUnitSystemSelected = viewModel::onUnitSystemSelected,
-                      onHeightCmChanged = viewModel::onHeightCmChanged,
-                      onFeetChanged = viewModel::onFeetChanged,
-                      onInchesChanged = viewModel::onInchesChanged,
-                      onWeightChanged = viewModel::onWeightChanged,
-                      onAgeChanged = viewModel::onAgeChanged,
-                      onGenderSelected = viewModel::onGenderSelected,
-                      onCalculateClicked = {
-                        if (navController.currentBackStackEntry?.destination?.route != BmiRoutes.MAIN_TABS) {
-                          return@CalculatorScreen
-                        }
-                        when (viewModel.calculateAndPrepareResultWithAdCheck()) {
-                          CalculateOutcome.INVALID -> Unit
-                          CalculateOutcome.NAVIGATE_DIRECTLY -> {
-                            adManager?.preloadInterstitialIfApproaching(
-                              viewModel.latestCalculationCount()
-                            )
-                            navigateToResultSingleTop()
+                  .background(MaterialTheme.colorScheme.background)
+                  .onSizeChanged { containerWidthPx = it.width },
+            ) {
+              TopLevelTab.entries.forEach { tab ->
+                key(tab) {
+                  val isSelected = selectedTab == tab
+                  val fromTab = previousTab
+                  val isOutgoing = fromTab == tab
+                  val forward = fromTab == null || selectedTab.ordinal >= fromTab.ordinal
+                  val isSettledActive = isMainTabsAtTop && isSelected && fromTab == null
+
+                  val tabModifier =
+                    Modifier.fillMaxSize()
+                      .zIndex(if (isSelected) 1f else if (isOutgoing) 0.5f else 0f)
+                      .graphicsLayer {
+                        val p = slideProgress.value
+                        val w = containerWidthPx.toFloat()
+                        when {
+                          isSelected && fromTab != null -> {
+                            alpha = 1f
+                            translationX =
+                              if (w > 0f) (1f - p) * (if (forward) w else -w) else 0f
                           }
-                          CalculateOutcome.SHOW_INTERSTITIAL -> {
-                            if (adManager != null) {
-                              adManager.showInterstitialIfReady { navigateToResultSingleTop() }
-                            } else {
+                          isSelected -> {
+                            alpha = 1f
+                            translationX = 0f
+                          }
+                          isOutgoing -> {
+                            alpha = 1f
+                            translationX =
+                              if (w > 0f) -p * (if (forward) w * 0.22f else -w * 0.22f) else 0f
+                          }
+                          else -> {
+                            alpha = 0f
+                            translationX = 100_000f
+                          }
+                        }
+                      }
+                      .let { base -> if (!isSelected) base.clearAndSetSemantics {} else base }
+
+                  Box(modifier = tabModifier) {
+                    when (tab) {
+                      TopLevelTab.CALCULATOR -> {
+                        val calculatorState by
+                          viewModel.calculatorState.collectAsStateWithLifecycle()
+                        CalculatorScreen(
+                          state = calculatorState,
+                          onUnitSystemSelected = viewModel::onUnitSystemSelected,
+                          onHeightCmChanged = viewModel::onHeightCmChanged,
+                          onFeetChanged = viewModel::onFeetChanged,
+                          onInchesChanged = viewModel::onInchesChanged,
+                          onWeightChanged = viewModel::onWeightChanged,
+                          onAgeChanged = viewModel::onAgeChanged,
+                          onGenderSelected = viewModel::onGenderSelected,
+                          onCalculateClicked = {
+                            if (
+                              navController.currentBackStackEntry?.destination?.route !=
+                                BmiRoutes.MAIN_TABS
+                            ) {
+                              return@CalculatorScreen
+                            }
+                            when (viewModel.calculateAndPrepareResultWithAdCheck()) {
+                              CalculateOutcome.INVALID -> Unit
+                              CalculateOutcome.NAVIGATE_DIRECTLY -> {
+                                adManager?.preloadInterstitialIfApproaching(
+                                  viewModel.latestCalculationCount()
+                                )
+                                navigateToResultSingleTop()
+                              }
+                              CalculateOutcome.SHOW_INTERSTITIAL -> {
+                                if (adManager != null) {
+                                  adManager.showInterstitialIfReady {
+                                    navigateToResultSingleTop()
+                                  }
+                                } else {
+                                  navigateToResultSingleTop()
+                                }
+                              }
+                            }
+                          },
+                          onResetClicked = viewModel::resetCalculator,
+                        )
+                      }
+
+                      TopLevelTab.HISTORY -> {
+                        val historyRecords by
+                          viewModel.historyRecords.collectAsStateWithLifecycle()
+                        HistoryScreen(
+                          records = historyRecords,
+                          isTabActive = isSettledActive,
+                          onRecordClicked = { record ->
+                            if (
+                              navController.currentBackStackEntry?.destination?.route ==
+                                BmiRoutes.MAIN_TABS
+                            ) {
+                              viewModel.openHistoryRecord(record)
                               navigateToResultSingleTop()
                             }
-                          }
-                        }
-                      },
-                      onResetClicked = viewModel::resetCalculator,
-                    )
+                          },
+                          onDeleteRecord = { recordId ->
+                            viewModel.deleteRecord(recordId)
+                            scope.launch {
+                              snackbarHostState.showSnackbar(
+                                context.getString(R.string.message_record_deleted)
+                              )
+                            }
+                          },
+                          onClearAll = {
+                            viewModel.clearAllHistory()
+                            scope.launch {
+                              snackbarHostState.showSnackbar(
+                                context.getString(R.string.message_history_cleared)
+                              )
+                            }
+                          },
+                          onGoToCalculator = { selectTab(TopLevelTab.CALCULATOR) },
+                        )
+                      }
 
-                  TopLevelTab.HISTORY ->
-                    HistoryScreen(
-                      records = historyRecords,
-                      isTabActive = isSettledActive,
-                      onRecordClicked = { record ->
-                        if (navController.currentBackStackEntry?.destination?.route == BmiRoutes.MAIN_TABS) {
-                          viewModel.openHistoryRecord(record)
-                          navigateToResultSingleTop()
-                        }
-                      },
-                      onDeleteRecord = { recordId ->
-                        viewModel.deleteRecord(recordId)
-                        scope.launch {
-                          snackbarHostState.showSnackbar(
-                            context.getString(R.string.message_record_deleted)
-                          )
-                        }
-                      },
-                      onClearAll = {
-                        viewModel.clearAllHistory()
-                        scope.launch {
-                          snackbarHostState.showSnackbar(
-                            context.getString(R.string.message_history_cleared)
-                          )
-                        }
-                      },
-                      onGoToCalculator = { selectTab(TopLevelTab.CALCULATOR) },
-                    )
-
-                  TopLevelTab.SETTINGS ->
-                    SettingsScreen(
-                      preferences = preferences,
-                      onThemeSelected = viewModel::setThemeMode,
-                      onDefaultUnitSelected = viewModel::setDefaultUnitSystem,
-                    )
+                      TopLevelTab.SETTINGS -> {
+                        val preferences by
+                          viewModel.userPreferences.collectAsStateWithLifecycle()
+                        SettingsScreen(
+                          preferences = preferences,
+                          onThemeSelected = viewModel::setThemeMode,
+                          onDefaultUnitSelected = viewModel::setDefaultUnitSystem,
+                        )
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -549,6 +596,7 @@ fun BmiAppShell(
     }
 
     composable(BmiRoutes.RESULT) {
+      val resultState by viewModel.resultState.collectAsStateWithLifecycle()
       Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
@@ -940,8 +988,20 @@ object BmiFormatters {
         "${formatDecimal(calc.healthyMinLb)} – ${formatDecimal(calc.healthyMaxLb)} lb"
     }
 
+  private val cachedTimestampFormatter =
+    object : ThreadLocal<Pair<Locale, SimpleDateFormat>>() {}
+
   fun formatTimestamp(timestampMillis: Long): String {
-    val sdf = SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault())
+    val locale = Locale.getDefault()
+    val existing = cachedTimestampFormatter.get()
+    val sdf =
+      if (existing != null && existing.first == locale) {
+        existing.second
+      } else {
+        SimpleDateFormat("MMM d, yyyy · h:mm a", locale).also {
+          cachedTimestampFormatter.set(locale to it)
+        }
+      }
     return sdf.format(Date(timestampMillis))
   }
 
