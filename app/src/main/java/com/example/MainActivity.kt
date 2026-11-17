@@ -197,7 +197,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -682,10 +681,6 @@ data class BmiValidationResult(
 }
 
 object BmiCalculator {
-  private const val CM_PER_INCH = 2.54
-  private const val KG_PER_LB = 0.45359237
-  private const val IMPERIAL_FACTOR = 703.0
-
   const val MIN_HEIGHT_CM = 50.0
   const val MAX_HEIGHT_CM = 280.0
   const val MIN_HEIGHT_IN = 20.0
@@ -698,11 +693,15 @@ object BmiCalculator {
   const val MAX_AGE = 120
 
   fun calculateMetricBmi(heightCm: Double, weightKg: Double): Double {
-    return (weightKg * 10000.0) / (heightCm * heightCm)
+    val numerator = BigDecimal.valueOf(weightKg).multiply(BigDecimal("10000"))
+    val denominator = BigDecimal.valueOf(heightCm).pow(2)
+    return numerator.divide(denominator, 12, RoundingMode.HALF_UP).toDouble()
   }
 
   fun calculateImperialBmi(heightInches: Double, weightLb: Double): Double {
-    return (weightLb * IMPERIAL_FACTOR) / (heightInches * heightInches)
+    val numerator = BigDecimal.valueOf(weightLb).multiply(BigDecimal("703"))
+    val denominator = BigDecimal.valueOf(heightInches).pow(2)
+    return numerator.divide(denominator, 12, RoundingMode.HALF_UP).toDouble()
   }
 
   fun categorize(bmi: Double): BmiCategory {
@@ -717,34 +716,62 @@ object BmiCalculator {
   }
 
   fun healthyWeightRangeKg(heightCm: Double): Pair<Double, Double> {
-    val cm2 = heightCm * heightCm
-    return ((18.5 * cm2) / 10000.0) to ((24.9 * cm2) / 10000.0)
+    val cm2 = BigDecimal.valueOf(heightCm).pow(2)
+    val divisor = BigDecimal("10000")
+    val minKg = BigDecimal("18.5").multiply(cm2).divide(divisor, 2, RoundingMode.CEILING)
+    val maxBoundary = BigDecimal("25.0").multiply(cm2).divide(divisor)
+    var maxKg = maxBoundary.setScale(2, RoundingMode.FLOOR)
+    if (maxKg.compareTo(maxBoundary) >= 0) {
+      maxKg = maxKg.subtract(BigDecimal("0.01"))
+    }
+    if (maxKg.compareTo(minKg) < 0) {
+      maxKg = minKg
+    }
+    return minKg.toDouble() to maxKg.toDouble()
   }
 
   fun healthyWeightRangeLb(heightInches: Double): Pair<Double, Double> {
-    val in2 = heightInches * heightInches
-    return ((18.5 * in2) / IMPERIAL_FACTOR) to ((24.9 * in2) / IMPERIAL_FACTOR)
+    val in2 = BigDecimal.valueOf(heightInches).pow(2)
+    val factor = BigDecimal("703")
+    val minLb = BigDecimal("18.5").multiply(in2).divide(factor, 2, RoundingMode.CEILING)
+    val maxNumerator = BigDecimal("25.0").multiply(in2)
+    var maxLb = maxNumerator.divide(factor, 2, RoundingMode.FLOOR)
+    if (maxLb.multiply(factor).compareTo(maxNumerator) >= 0) {
+      maxLb = maxLb.subtract(BigDecimal("0.01"))
+    }
+    if (maxLb.compareTo(minLb) < 0) {
+      maxLb = minLb
+    }
+    return minLb.toDouble() to maxLb.toDouble()
   }
 
   fun cmToFeetInches(cm: Double): Pair<Double, Double> {
-    val totalInches = cm / CM_PER_INCH
-    var feet = floor(totalInches / 12.0)
-    var inches = (totalInches - feet * 12.0).coerceAtLeast(0.0)
-    if (inches >= 12.0) {
-      feet += 1.0
-      inches -= 12.0
+    val totalInches =
+      BigDecimal.valueOf(cm).divide(BigDecimal("2.54"), 12, RoundingMode.HALF_UP)
+    val twelve = BigDecimal("12")
+    var feet = totalInches.divide(twelve, 0, RoundingMode.FLOOR)
+    var inches = totalInches.subtract(feet.multiply(twelve)).coerceAtLeast(BigDecimal.ZERO)
+    if (inches >= twelve) {
+      feet = feet.add(BigDecimal.ONE)
+      inches = inches.subtract(twelve)
     }
-    return feet to inches
+    return feet.toDouble() to inches.toDouble()
   }
+
+  fun feetInchesToTotalInches(feet: Double, inches: Double): Double =
+    BigDecimal.valueOf(feet).multiply(BigDecimal("12")).add(BigDecimal.valueOf(inches)).toDouble()
 
   fun feetInchesToCm(feet: Double, inches: Double): Double {
-    val totalInches = feet * 12.0 + inches
-    return totalInches * CM_PER_INCH
+    val totalInches =
+      BigDecimal.valueOf(feet).multiply(BigDecimal("12")).add(BigDecimal.valueOf(inches))
+    return totalInches.multiply(BigDecimal("2.54")).toDouble()
   }
 
-  fun kgToLb(kg: Double): Double = kg / KG_PER_LB
+  fun kgToLb(kg: Double): Double =
+    BigDecimal.valueOf(kg).divide(BigDecimal("0.45359237"), 12, RoundingMode.HALF_UP).toDouble()
 
-  fun lbToKg(lb: Double): Double = lb * KG_PER_LB
+  fun lbToKg(lb: Double): Double =
+    BigDecimal.valueOf(lb).multiply(BigDecimal("0.45359237")).toDouble()
 
   fun validateAndCalculate(
     unitSystem: UnitSystem,
@@ -810,7 +837,7 @@ object BmiCalculator {
               parsedFeet != null &&
               parsedInches != null
           ) {
-            val totalInches = parsedFeet * 12.0 + parsedInches
+            val totalInches = feetInchesToTotalInches(parsedFeet, parsedInches)
             if (totalInches < MIN_HEIGHT_IN || totalInches > MAX_HEIGHT_IN) {
               heightError = HeightValidationError.OutOfRangeImperial
             } else {
@@ -872,7 +899,7 @@ object BmiCalculator {
       )
     }
 
-    val totalInches = feet * 12.0 + inches
+    val totalInches = feetInchesToTotalInches(feet, inches)
     val bmi =
       if (unitSystem == UnitSystem.METRIC) {
         calculateMetricBmi(heightCm, weightKg)
@@ -938,6 +965,39 @@ object BmiFormatters {
       UnitSystem.IMPERIAL ->
         "${formatDecimal(calc.healthyMinLb)} – ${formatDecimal(calc.healthyMaxLb)} lb"
     }
+
+  fun formatWeightSuggestion(context: Context, calc: BmiCalculation): String {
+    val (current, min, max, unit) =
+      when (calc.unitSystem) {
+        UnitSystem.METRIC ->
+          Quadruple(calc.weightKg, calc.healthyMinKg, calc.healthyMaxKg, "kg")
+        UnitSystem.IMPERIAL ->
+          Quadruple(calc.weightLb, calc.healthyMinLb, calc.healthyMaxLb, "lb")
+      }
+    return when {
+      calc.bmi < 18.5 -> {
+        val gain =
+          BigDecimal.valueOf(min)
+            .subtract(BigDecimal.valueOf(current))
+            .setScale(2, RoundingMode.CEILING)
+            .toDouble()
+            .coerceAtLeast(0.01)
+        context.getString(R.string.healthy_weight_gain_format, "${formatDecimal(gain)} $unit")
+      }
+      calc.bmi >= 25.0 -> {
+        val lose =
+          BigDecimal.valueOf(current)
+            .subtract(BigDecimal.valueOf(max))
+            .setScale(2, RoundingMode.CEILING)
+            .toDouble()
+            .coerceAtLeast(0.01)
+        context.getString(R.string.healthy_weight_lose_format, "${formatDecimal(lose)} $unit")
+      }
+      else -> context.getString(R.string.healthy_weight_status_normal)
+    }
+  }
+
+  private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
   private val cachedTimestampFormatter =
     object : ThreadLocal<Pair<Locale, SimpleDateFormat>>() {}
@@ -1031,7 +1091,7 @@ data class BmiRecordEntity(
         .getOrDefault(BmiCalculator.categorize(bmi))
     val parsedGender =
       runCatching { GenderOption.valueOf(gender) }.getOrDefault(GenderOption.UNSPECIFIED)
-    val totalInches = feet * 12.0 + inches
+    val totalInches = BmiCalculator.feetInchesToTotalInches(feet, inches)
     val (minKg, maxKg) = BmiCalculator.healthyWeightRangeKg(heightCm)
     val (minLb, maxLb) =
       if (totalInches > 0.0) BmiCalculator.healthyWeightRangeLb(totalInches)
@@ -3311,6 +3371,11 @@ fun ResultScreen(
             ResultDetailRow(
               label = stringResource(R.string.healthy_weight_for_height_label),
               value = BmiFormatters.formatHealthyWeightRange(calculation),
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            ResultDetailRow(
+              label = stringResource(R.string.healthy_weight_status_label),
+              value = BmiFormatters.formatWeightSuggestion(context, calculation),
             )
           }
         }

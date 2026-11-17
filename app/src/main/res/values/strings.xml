@@ -52,8 +52,12 @@
     <string name="category_obesity_class_2">Obesity Class 2</string>
     <string name="category_obesity_class_3">Obesity Class 3</string>
     <string name="healthy_bmi_range_label">Healthy BMI range</string>
-    <string name="healthy_bmi_range_value">18.5 – 24.9</string>
+    <string name="healthy_bmi_range_value">18.5 – 24.99</string>
     <string name="healthy_weight_for_height_label">Healthy weight for your height</string>
+    <string name="healthy_weight_status_label">Weight suggestion</string>
+    <string name="healthy_weight_status_normal">Within healthy range</string>
+    <string name="healthy_weight_gain_format">Gain %1$s</string>
+    <string name="healthy_weight_lose_format">Lose %1$s</string>
     <string name="bmi_scale_label">BMI Range Indicator</string>
     <string name="inputs_summary_label">Measurements</string>
     <string name="label_height">Height</string>
@@ -127,7 +131,7 @@
     <string name="about_cat_obesity_class_2_range">35.0 – 39.9</string>
     <string name="about_cat_obesity_class_3_range">40.0 or above</string>
     <string name="methodology_healthy_weight_label">Healthy Weight Reference</string>
-    <string name="methodology_healthy_weight_note">The healthy weight range for your height is derived by solving the BMI formula for values between 18.5 and 24.9.</string>
+    <string name="methodology_healthy_weight_note">The healthy weight range for your height is derived by solving the BMI formula for the Normal BMI interval (18.5 to &lt; 25.0).</string>
     <string name="methodology_disclaimer_title">Disclaimer &amp; Limitations</string>
     <string name="methodology_disclaimer_body">Standard adult BMI categories apply to adults aged 20 and above. BMI is a general screening indicator and does not directly measure body fat percentage, muscle mass, fat distribution, or bone density. Athletes and muscular individuals, older adults, pregnant or nursing individuals, and children or teenagers (who require age- and sex-specific BMI-for-age percentiles) require different clinical interpretation. This application is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment.</string>
 </resources>
