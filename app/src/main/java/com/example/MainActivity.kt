@@ -9,7 +9,6 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -155,6 +154,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -1513,7 +1513,7 @@ class BmiViewModel(private val repository: BmiRepository) : ViewModel() {
   }
 
   fun onAgeChanged(value: String) {
-    val filtered = value.filter { it.isDigit() }.take(3)
+    val filtered = value.filter { it in '0'..'9' }.take(3)
     updateCalculatorInputs(_calculatorState.value.copy(ageInput = filtered))
   }
 
@@ -1693,7 +1693,7 @@ class BmiViewModel(private val repository: BmiRepository) : ViewModel() {
     var dotSeen = false
     val sb = StringBuilder()
     for (ch in raw) {
-      if (ch.isDigit()) {
+      if (ch in '0'..'9') {
         sb.append(ch)
       } else if ((ch == '.' || ch == ',') && !dotSeen) {
         dotSeen = true
@@ -2263,7 +2263,11 @@ class StartIoAdManager(private val activity: Activity) {
     val completed = AtomicBoolean(false)
     fun finishOnce() {
       if (completed.compareAndSet(false, true)) {
-        mainHandler.post { onComplete() }
+        mainHandler.post {
+          if (!isDestroyed) {
+            onComplete()
+          }
+        }
       }
     }
 
@@ -2702,8 +2706,10 @@ fun BmiRangeIndicator(
         cornerRadius = corner,
       )
 
+      if (size.width <= 0f) return@Canvas
+      val edgePad = minOf(8.dp.toPx(), size.width / 2f)
       val indicatorX =
-        (markerFraction * size.width).coerceIn(8.dp.toPx(), size.width - 8.dp.toPx())
+        (markerFraction * size.width).coerceIn(edgePad, size.width - edgePad)
       val centerY = size.height / 2f
       drawCircle(
         color = markerRingColor,
@@ -3712,14 +3718,20 @@ private fun HistoryRecordRow(
 
 // region Settings Screen
 
-private fun openExternalUrl(context: Context, url: String) {
+private fun openExternalUrl(context: Context, url: String): Boolean {
   val intent =
-    Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+    Intent(Intent.ACTION_VIEW, url.toUri()).apply {
       if (context !is Activity) {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       }
     }
-  runCatching { context.startActivity(intent) }
+  return runCatching { context.startActivity(intent) }.isSuccess
+}
+
+private enum class SettingsFallbackDoc {
+  PRIVACY_POLICY,
+  ABOUT_APP,
+  TERMS_CONDITIONS,
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -3734,6 +3746,27 @@ fun SettingsScreen(
   val privacyPolicyUrl = stringResource(R.string.url_privacy_policy)
   val aboutAppUrl = stringResource(R.string.url_about_app)
   val termsConditionsUrl = stringResource(R.string.url_terms_conditions)
+  var fallbackDoc by remember { mutableStateOf<SettingsFallbackDoc?>(null) }
+
+  fallbackDoc?.let { doc ->
+    val (title, body) =
+      when (doc) {
+        SettingsFallbackDoc.PRIVACY_POLICY ->
+          stringResource(R.string.settings_privacy_policy_title) to
+            stringResource(R.string.settings_privacy_policy_body)
+        SettingsFallbackDoc.ABOUT_APP ->
+          stringResource(R.string.settings_about_app_title) to
+            stringResource(R.string.settings_about_app_body, BuildConfig.VERSION_NAME)
+        SettingsFallbackDoc.TERMS_CONDITIONS ->
+          stringResource(R.string.settings_terms_conditions_title) to
+            stringResource(R.string.settings_terms_conditions_body)
+      }
+    InfoDocumentDialog(
+      title = title,
+      body = body,
+      onDismiss = { fallbackDoc = null },
+    )
+  }
 
   Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     TopAppBar(
@@ -3861,21 +3894,33 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_privacy_policy_title),
             icon = Icons.Outlined.Lock,
             testTag = "settings_privacy_policy_item",
-            onClick = { openExternalUrl(context, privacyPolicyUrl) },
+            onClick = {
+              if (!openExternalUrl(context, privacyPolicyUrl)) {
+                fallbackDoc = SettingsFallbackDoc.PRIVACY_POLICY
+              }
+            },
           )
 
           SettingsInfoRow(
             title = stringResource(R.string.settings_about_app_title),
             icon = Icons.Outlined.Info,
             testTag = "settings_about_app_item",
-            onClick = { openExternalUrl(context, aboutAppUrl) },
+            onClick = {
+              if (!openExternalUrl(context, aboutAppUrl)) {
+                fallbackDoc = SettingsFallbackDoc.ABOUT_APP
+              }
+            },
           )
 
           SettingsInfoRow(
             title = stringResource(R.string.settings_terms_conditions_title),
             icon = Icons.Outlined.Description,
             testTag = "settings_terms_conditions_item",
-            onClick = { openExternalUrl(context, termsConditionsUrl) },
+            onClick = {
+              if (!openExternalUrl(context, termsConditionsUrl)) {
+                fallbackDoc = SettingsFallbackDoc.TERMS_CONDITIONS
+              }
+            },
           )
         }
 

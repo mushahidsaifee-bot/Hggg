@@ -254,6 +254,70 @@ class ExampleUnitTest {
     }
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun validationAndInputSanitization_handleBoundariesAndEdgeInputs() = runTest {
+    val dispatcher = StandardTestDispatcher(testScheduler)
+    Dispatchers.setMain(dispatcher)
+    try {
+      // Standalone dot should fail validation as InvalidNumber
+      val dotResult =
+        BmiCalculator.validateAndCalculate(
+          unitSystem = UnitSystem.METRIC,
+          heightCmText = ".",
+          feetText = "",
+          inchesText = "",
+          weightText = ".",
+          ageText = "",
+          gender = GenderOption.UNSPECIFIED,
+        )
+      assertFalse(dotResult.isValid)
+      assertEquals(HeightValidationError.InvalidNumber, dotResult.heightError)
+      assertEquals(WeightValidationError.InvalidNumber, dotResult.weightError)
+
+      // Exact min & max metric boundaries should succeed
+      val minMetric =
+        BmiCalculator.validateAndCalculate(
+          unitSystem = UnitSystem.METRIC,
+          heightCmText = "50",
+          feetText = "",
+          inchesText = "",
+          weightText = "10",
+          ageText = "2",
+          gender = GenderOption.UNSPECIFIED,
+        )
+      assertTrue(minMetric.isValid)
+      assertEquals(40.0, minMetric.calculation!!.bmi, 0.0)
+      assertEquals(BmiCategory.OBESITY_CLASS_3, minMetric.calculation!!.category)
+
+      val maxMetric =
+        BmiCalculator.validateAndCalculate(
+          unitSystem = UnitSystem.METRIC,
+          heightCmText = "280",
+          feetText = "",
+          inchesText = "",
+          weightText = "500",
+          ageText = "120",
+          gender = GenderOption.UNSPECIFIED,
+        )
+      assertTrue(maxMetric.isValid)
+
+      // Comma decimal separator converts to dot, non-ASCII digits are ignored cleanly
+      val viewModel = BmiViewModel(FakeBmiRepository())
+      advanceUntilIdle()
+      viewModel.onHeightCmChanged("175,5")
+      viewModel.onWeightChanged("70,25")
+      viewModel.onAgeChanged("2\u06658")
+      assertEquals("175.5", viewModel.calculatorState.value.heightCmInput)
+      assertEquals("70.25", viewModel.calculatorState.value.weightInput)
+      assertEquals("28", viewModel.calculatorState.value.ageInput)
+      assertEquals(CalculateOutcome.NAVIGATE_DIRECTLY, viewModel.calculateAndPrepareResultWithAdCheck())
+      advanceUntilIdle()
+    } finally {
+      Dispatchers.resetMain()
+    }
+  }
+
   private class FakeBmiRepository : BmiRepository {
     val prefsFlow = MutableStateFlow(UserPreferences())
     var saveCount = 0
