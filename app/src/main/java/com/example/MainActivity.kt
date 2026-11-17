@@ -716,33 +716,19 @@ object BmiCalculator {
   }
 
   fun healthyWeightRangeKg(heightCm: Double): Pair<Double, Double> {
-    val cm2 = BigDecimal.valueOf(heightCm).pow(2)
-    val divisor = BigDecimal("10000")
-    val minKg = BigDecimal("18.5").multiply(cm2).divide(divisor, 2, RoundingMode.CEILING)
-    val maxBoundary = BigDecimal("25.0").multiply(cm2).divide(divisor)
-    var maxKg = maxBoundary.setScale(2, RoundingMode.FLOOR)
-    if (maxKg.compareTo(maxBoundary) >= 0) {
-      maxKg = maxKg.subtract(BigDecimal("0.01"))
-    }
-    if (maxKg.compareTo(minKg) < 0) {
-      maxKg = minKg
-    }
-    return minKg.toDouble() to maxKg.toDouble()
+    val heightMeters = BigDecimal.valueOf(heightCm).divide(BigDecimal("100"))
+    val m2 = heightMeters.pow(2)
+    val minKg = BigDecimal("18.5").multiply(m2).toDouble()
+    val maxKg = BigDecimal("24.9").multiply(m2).toDouble()
+    return minKg to maxKg
   }
 
   fun healthyWeightRangeLb(heightInches: Double): Pair<Double, Double> {
     val in2 = BigDecimal.valueOf(heightInches).pow(2)
     val factor = BigDecimal("703")
-    val minLb = BigDecimal("18.5").multiply(in2).divide(factor, 2, RoundingMode.CEILING)
-    val maxNumerator = BigDecimal("25.0").multiply(in2)
-    var maxLb = maxNumerator.divide(factor, 2, RoundingMode.FLOOR)
-    if (maxLb.multiply(factor).compareTo(maxNumerator) >= 0) {
-      maxLb = maxLb.subtract(BigDecimal("0.01"))
-    }
-    if (maxLb.compareTo(minLb) < 0) {
-      maxLb = minLb
-    }
-    return minLb.toDouble() to maxLb.toDouble()
+    val minLb = BigDecimal("18.5").multiply(in2).divide(factor, 12, RoundingMode.HALF_UP).toDouble()
+    val maxLb = BigDecimal("24.9").multiply(in2).divide(factor, 12, RoundingMode.HALF_UP).toDouble()
+    return minLb to maxLb
   }
 
   fun cmToFeetInches(cm: Double): Pair<Double, Double> {
@@ -979,7 +965,7 @@ object BmiFormatters {
         val gain =
           BigDecimal.valueOf(min)
             .subtract(BigDecimal.valueOf(current))
-            .setScale(2, RoundingMode.CEILING)
+            .setScale(2, RoundingMode.HALF_UP)
             .toDouble()
             .coerceAtLeast(0.01)
         context.getString(R.string.healthy_weight_gain_format, "${formatDecimal(gain)} $unit")
@@ -988,7 +974,7 @@ object BmiFormatters {
         val lose =
           BigDecimal.valueOf(current)
             .subtract(BigDecimal.valueOf(max))
-            .setScale(2, RoundingMode.CEILING)
+            .setScale(2, RoundingMode.HALF_UP)
             .toDouble()
             .coerceAtLeast(0.01)
         context.getString(R.string.healthy_weight_lose_format, "${formatDecimal(lose)} $unit")

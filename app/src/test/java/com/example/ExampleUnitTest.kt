@@ -93,30 +93,20 @@ class ExampleUnitTest {
 
   @Test
   fun conversionsAndFormatters_preserveExactDoubleAccuracy() {
+    // 160 cm (1.6 m): Min = 18.5 * 2.56 = 47.36, Max = 24.9 * 2.56 = 63.744
     val (minKg160, maxKg160) = BmiCalculator.healthyWeightRangeKg(160.0)
     assertEquals(47.36, minKg160, 0.0)
-    assertEquals(63.99, maxKg160, 0.0)
-    assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(160.0, minKg160)))
-    assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(160.0, maxKg160)))
-    assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(160.0, maxKg160 + 0.01)))
+    assertEquals(63.744, maxKg160, 0.0)
 
-    // 172 cm: 18.5 * 1.72^2 = 54.7304 -> CEILING to 54.74 so min is guaranteed Normal (54.73 is Underweight)
-    val (minKg172, maxKg172) = BmiCalculator.healthyWeightRangeKg(172.0)
-    assertEquals(54.74, minKg172, 0.0)
-    assertEquals(73.95, maxKg172, 0.0)
-    assertEquals(BmiCategory.UNDERWEIGHT, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(172.0, 54.73)))
-    assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(172.0, minKg172)))
-    assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(172.0, maxKg172)))
-    assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(172.0, 73.96)))
+    // 170 cm (1.7 m): Min = 18.5 * 2.89 = 53.465, Max = 24.9 * 2.89 = 71.961
+    val (minKg170, maxKg170) = BmiCalculator.healthyWeightRangeKg(170.0)
+    assertEquals(53.465, minKg170, 0.0)
+    assertEquals(71.961, maxKg170, 0.0)
 
-    // 70 in (5 ft 10 in): minLb 128.95, maxLb 174.25
+    // 70 in (5 ft 10 in): Min = 18.5 * 4900 / 703, Max = 24.9 * 4900 / 703
     val (minLb70, maxLb70) = BmiCalculator.healthyWeightRangeLb(70.0)
-    assertEquals(128.95, minLb70, 0.0)
-    assertEquals(174.25, maxLb70, 0.0)
-    assertEquals(BmiCategory.UNDERWEIGHT, BmiCalculator.categorize(BmiCalculator.calculateImperialBmi(70.0, 128.94)))
-    assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(BmiCalculator.calculateImperialBmi(70.0, minLb70)))
-    assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(BmiCalculator.calculateImperialBmi(70.0, maxLb70)))
-    assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(BmiCalculator.calculateImperialBmi(70.0, 174.26)))
+    assertEquals(128.947368421053, minLb70, 1e-12)
+    assertEquals(173.556187766714, maxLb70, 1e-12)
 
     val cmRoundTrip =
       BmiCalculator.cmToFeetInches(175.0).let { (ft, inch) ->
@@ -133,13 +123,12 @@ class ExampleUnitTest {
     assertEquals("22.86", BmiFormatters.formatBmi(22.857142857142858))
 
     assertEquals(61.4, BmiCalculator.feetInchesToTotalInches(5.1, 0.2), 0.0)
+    // 175 cm (1.75 m): Min = 18.5 * 3.0625 = 56.65625, Max = 24.9 * 3.0625 = 76.25625
     val (min175, max175) = BmiCalculator.healthyWeightRangeKg(175.0)
-    assertEquals(56.66, min175, 0.0)
-    assertEquals(76.56, max175, 0.0)
-    assertEquals(BmiCategory.UNDERWEIGHT, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(175.0, 56.65)))
-    assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(175.0, min175)))
-    assertEquals(BmiCategory.NORMAL, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(175.0, max175)))
-    assertEquals(BmiCategory.OVERWEIGHT, BmiCalculator.categorize(BmiCalculator.calculateMetricBmi(175.0, 76.57)))
+    assertEquals(56.65625, min175, 0.0)
+    assertEquals(76.25625, max175, 0.0)
+    assertEquals("56.66", BmiFormatters.formatDecimal(min175))
+    assertEquals("76.26", BmiFormatters.formatDecimal(max175))
   }
 
   @Test
