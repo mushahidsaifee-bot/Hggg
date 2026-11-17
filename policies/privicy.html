@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy - BMI Calculator</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-alt: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --accent-text: #115e59;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1120;
+        --surface: #111827;
+        --surface-alt: #1e293b;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --border: #293548;
+        --accent: #2dd4bf;
+        --accent-soft: #134e4a;
+        --accent-text: #99f6e4;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.7;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 16px 56px;
+    }
+
+    header.policy-header {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background-color: var(--accent-soft);
+      color: var(--accent-text);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.9rem;
+      line-height: 1.25;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .meta-item strong {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    main.policy-content {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+    }
+
+    section {
+      padding-bottom: 22px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section:last-child {
+      padding-bottom: 0;
+      margin-bottom: 0;
+      border-bottom: none;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.28rem;
+      color: var(--accent);
+    }
+
+    h3 {
+      margin: 16px 0 6px;
+      font-size: 1.04rem;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    ul {
+      margin: 8px 0 12px;
+      padding-left: 22px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    .callout {
+      background-color: var(--surface-alt);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      font-size: 0.95rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 0.93rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background-color: var(--surface-alt);
+      font-weight: 600;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88em;
+      background-color: var(--surface-alt);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 600px) {
+      header.policy-header, main.policy-content {
+        padding: 20px 16px;
+      }
+
+      h1 {
+        font-size: 1.55rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="policy-header">
+      <span class="badge">Privacy Policy</span>
+      <h1>BMI Calculator</h1>
+      <p class="subtitle">
+        We respect your privacy. This page explains in simple English what information BMI Calculator uses, how it is stored on your phone, and how advertising works in the app.
+      </p>
+      <div class="meta-grid">
+        <div class="meta-item">
+          <strong>App Name</strong>
+          BMI Calculator
+        </div>
+        <div class="meta-item">
+          <strong>Package ID</strong>
+          <code>com.aistudio.bmicalc.qvxrkm</code>
+        </div>
+        <div class="meta-item">
+          <strong>Version</strong>
+          1.0 (Android)
+        </div>
+        <div class="meta-item">
+          <strong>Last Updated</strong>
+          November 16, 2026
+        </div>
+      </div>
+    </header>
+
+    <main class="policy-content">
+      <section id="summary">
+        <h2>1. Quick Summary</h2>
+        <div class="callout">
+          <strong>Your health and body measurements never leave your device.</strong> All BMI calculations, height, weight, age, gender, saved history records, and app settings stay strictly on your own phone or tablet.
+        </div>
+        <ul>
+          <li><strong>No Account Required:</strong> You do not need to create an account, sign in, or give your name, email address, or phone number to use the app.</li>
+          <li><strong>Works Offline:</strong> All BMI calculations and saved history features work completely offline on your device.</li>
+          <li><strong>No Server Uploads:</strong> We do not have a server that collects or stores your BMI records or personal measurements.</li>
+          <li><strong>Advertising:</strong> The app shows ads through <strong>Start.io</strong> when you are connected to the internet. Start.io may collect certain device and ad-related data as explained below.</li>
+        </ul>
+      </section>
+
+      <section id="about-app">
+        <h2>2. About the BMI Calculator App</h2>
+        <p>
+          <strong>BMI Calculator</strong> is an offline-first Android utility app designed to help you calculate your Body Mass Index (BMI), understand standard adult BMI categories, see a healthy weight range for your height, and keep a personal log of your results on your device.
+        </p>
+        <h3>Key Features</h3>
+        <ul>
+          <li><strong>Metric &amp; Imperial Units:</strong> Calculate BMI using centimeters and kilograms (Metric) or feet, inches, and pounds (Imperial).</li>
+          <li><strong>Optional Details:</strong> You may optionally enter your age (2–120 years) and select a gender option (Male, Female, or Unspecified) for your own reference. If an age under 20 is entered, the app displays a notice explaining that standard adult BMI categories apply to adults aged 20 and above.</li>
+          <li><strong>Detailed Result Screen:</strong> Shows your calculated BMI number, category (Underweight, Normal, Overweight, Obesity Class 1, Obesity Class 2, or Obesity Class 3), a visual BMI range indicator, the healthy weight range for your height, and a simple weight suggestion.</li>
+          <li><strong>Local History:</strong> Save any result to your device's local history, review past results at any time, delete individual entries, or clear your entire history with one tap.</li>
+          <li><strong>Customizable Settings:</strong> Choose between System, Light, or Dark theme, set your default measurement unit (Metric or Imperial), and review the BMI calculation methodology and disclaimers inside the app.</li>
+        </ul>
+      </section>
+
+      <section id="data-stored">
+        <h2>3. Information You Enter &amp; How It Is Stored</h2>
+        <p>
+          When you use BMI Calculator, the information you type in is processed only inside the app on your device:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Data Type</th>
+              <th>What Is Stored</th>
+              <th>Where It Lives &amp; Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Body Measurements &amp; Results</strong></td>
+              <td>Height, weight, optional age, optional gender, calculated BMI value, BMI category, unit system, and date/time.</td>
+              <td>Saved only when you tap <em>Save Result</em>, inside a private on-device SQLite database (Room database <code>bmi_calculator_db</code>) so you can view your History later.</td>
+            </tr>
+            <tr>
+              <td><strong>App Preferences</strong></td>
+              <td>Selected theme (System, Light, or Dark), default unit system (Metric or Imperial), and a local calculation counter.</td>
+              <td>Stored privately on your device using Android Jetpack DataStore (<code>bmi_user_preferences</code>) and SharedPreferences (<code>bmi_boot_cache</code>) to remember your settings and manage when ads appear.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>No Cloud Backup:</strong> Android automatic cloud backup is disabled in this app (<code>android:allowBackup="false"</code>), meaning your local BMI history database is not automatically backed up to Google Drive by the app.
+        </p>
+        <p>
+          <strong>No Sharing of Measurements:</strong> We never read, copy, sell, or send your height, weight, age, gender, or BMI history to our servers, to Start.io, or to any third party.
+        </p>
+      </section>
+
+      <section id="advertising">
+        <h2>4. Advertising &amp; Third-Party Services (Start.io)</h2>
+        <p>
+          To keep BMI Calculator free to use, the app displays banner advertisements and occasional interstitial (full-screen) advertisements provided by <strong>Start.io</strong> (formerly StartApp).
+        </p>
+        <ul>
+          <li><strong>When Ads Load:</strong> The app checks if your device has an active, validated internet connection. When you are offline, no ad requests are sent and banner areas stay hidden.</li>
+          <li><strong>Interstitial Ad Timing:</strong> A full-screen ad may load and appear once every 8 BMI calculations when your device is online.</li>
+          <li><strong>What Start.io May Collect:</strong> When your device is online, the Start.io SDK may automatically collect limited technical and advertising data to show relevant ads, prevent ad fraud, cap how often you see the same ad, and measure ad performance. This may include:
+            <ul>
+              <li>Your device's Google Advertising ID (AD_ID).</li>
+              <li>Device details (such as device model, manufacturer, Android OS version, screen size, and language).</li>
+              <li>Network and connection details (such as IP address and connection type like Wi-Fi or mobile data).</li>
+              <li>App package name, app version, and basic ad interaction events (such as whether an ad was shown or tapped).</li>
+            </ul>
+          </li>
+          <li><strong>Start.io Privacy Policy:</strong> Start.io handles its data under its own privacy policy, which you can read here: <a href="https://www.start.io/policy/privacy-policy/" target="_blank" rel="noopener noreferrer">https://www.start.io/policy/privacy-policy/</a>.</li>
+        </ul>
+      </section>
+
+      <section id="permissions">
+        <h2>5. App Permissions Explained</h2>
+        <p>
+          BMI Calculator asks for only the minimum permissions needed to run and display ads. It does <strong>not</strong> ask for access to your camera, location (GPS), microphone, contacts, photos, files, or health/fitness sensors.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Permission</th>
+              <th>Why the App Needs It</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>INTERNET</code></td>
+              <td>Used only to load advertisements from Start.io when online and to open external policy or information links if you tap them in Settings.</td>
+            </tr>
+            <tr>
+              <td><code>ACCESS_NETWORK_STATE</code></td>
+              <td>Used to check whether your device has an active internet connection before attempting to initialize or load ads.</td>
+            </tr>
+            <tr>
+              <td><code>com.google.android.gms.permission.AD_ID</code></td>
+              <td>Allows the Start.io advertising SDK to access your Android Advertising ID to deliver and measure ads in compliance with Google Play policies.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="your-choices">
+        <h2>6. Your Privacy Choices &amp; How to Delete Your Data</h2>
+        <p>You have full control over your data on your device:</p>
+        <ul>
+          <li><strong>Delete One Record:</strong> Open the <em>History</em> tab and tap the delete icon next to any saved BMI record (or open the record and tap <em>Delete Record</em>).</li>
+          <li><strong>Clear All History:</strong> Open the <em>History</em> tab and tap <em>Clear All</em> to permanently erase all saved BMI records from your device.</li>
+          <li><strong>Remove Everything:</strong> You can clear the app's storage in Android Settings (<em>Settings &gt; Apps &gt; BMI Calculator &gt; Storage &gt; Clear data</em>) or uninstall the app to permanently remove all saved records and preferences.</li>
+          <li><strong>Control Personalized Ads:</strong> You can reset or delete your device's Advertising ID or opt out of personalized ads at any time in your Android device settings (typically under <em>Settings &gt; Google &gt; Ads</em> or <em>Settings &gt; Privacy &gt; Ads</em>).</li>
+          <li><strong>Use Offline:</strong> If you turn off Wi-Fi and mobile data, the app continues to calculate and save BMI records locally without loading any ads.</li>
+        </ul>
+      </section>
+
+      <section id="children">
+        <h2>7. Children's Privacy</h2>
+        <p>
+          BMI Calculator does not knowingly collect any personal information from children under 13 (or the applicable age in your country). The app does not require registration or collect names, emails, or personal profiles. Any optional age entered into the calculator stays strictly on the user's device.
+        </p>
+        <p>
+          Please note that standard adult BMI categories shown in the app are intended for adults aged 20 and above; children and teenagers require age- and sex-specific BMI-for-age percentiles evaluated by a healthcare professional.
+        </p>
+      </section>
+
+      <section id="medical-disclaimer">
+        <h2>8. Health &amp; Medical Disclaimer</h2>
+        <p>
+          BMI Calculator is provided for general informational and educational purposes only. Body Mass Index (BMI) is a simple screening measure based on height and weight and does not directly measure body fat percentage, muscle mass, fat distribution, or bone density.
+        </p>
+        <p>
+          This app does not provide medical advice, diagnosis, or treatment. Always consult a qualified doctor or healthcare professional before making decisions about your health, weight, diet, or exercise routine.
+        </p>
+      </section>
+
+      <section id="changes">
+        <h2>9. Changes to This Privacy Policy</h2>
+        <p>
+          We may update this Privacy Policy from time to time if we add new features or if legal or platform requirements change. When we update it, we will change the "Last Updated" date at the top of this page. We encourage you to check this page occasionally to stay informed.
+        </p>
+      </section>
+
+      <section id="contact">
+        <h2>10. Contact Us</h2>
+        <p>
+          If you have any questions, suggestions, or concerns about this Privacy Policy or how BMI Calculator handles information, please contact the developer at:
+        </p>
+        <p>
+          <strong>Email:</strong> <a href="mailto:mushahidsaifee5@gmail.com">mushahidsaifee5@gmail.com</a>
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2026 BMI Calculator. All rights reserved.</p>
+    </footer>
+  </div>
+</body>
+</html>

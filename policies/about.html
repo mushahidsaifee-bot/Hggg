@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About App - BMI Calculator</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-alt: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --accent-text: #115e59;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1120;
+        --surface: #111827;
+        --surface-alt: #1e293b;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --border: #293548;
+        --accent: #2dd4bf;
+        --accent-soft: #134e4a;
+        --accent-text: #99f6e4;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.7;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 16px 56px;
+    }
+
+    header.policy-header {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background-color: var(--accent-soft);
+      color: var(--accent-text);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.9rem;
+      line-height: 1.25;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .meta-item strong {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    main.policy-content {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+    }
+
+    section {
+      padding-bottom: 22px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section:last-child {
+      padding-bottom: 0;
+      margin-bottom: 0;
+      border-bottom: none;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.28rem;
+      color: var(--accent);
+    }
+
+    h3 {
+      margin: 16px 0 6px;
+      font-size: 1.04rem;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    ul {
+      margin: 8px 0 12px;
+      padding-left: 22px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    .callout {
+      background-color: var(--surface-alt);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      font-size: 0.95rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+      margin: 12px 0;
+    }
+
+    .feature-card {
+      background-color: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .feature-card h3 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .feature-card p {
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 0.93rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background-color: var(--surface-alt);
+      font-weight: 600;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88em;
+      background-color: var(--surface-alt);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 600px) {
+      header.policy-header, main.policy-content {
+        padding: 20px 16px;
+      }
+
+      h1 {
+        font-size: 1.55rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="policy-header">
+      <span class="badge">About App</span>
+      <h1>BMI Calculator</h1>
+      <p class="subtitle">
+        A fast, clean, offline-first Android app that helps you calculate your Body Mass Index (BMI), see the healthy weight range for your height, and keep a private history on your own device.
+      </p>
+      <div class="meta-grid">
+        <div class="meta-item">
+          <strong>App Name</strong>
+          BMI Calculator
+        </div>
+        <div class="meta-item">
+          <strong>Package ID</strong>
+          <code>com.aistudio.bmicalc.qvxrkm</code>
+        </div>
+        <div class="meta-item">
+          <strong>Version</strong>
+          1.0
+        </div>
+        <div class="meta-item">
+          <strong>Platform</strong>
+          Android 7.0+ (API 24–36)
+        </div>
+      </div>
+    </header>
+
+    <main class="policy-content">
+      <section id="overview">
+        <h2>1. What Is BMI Calculator?</h2>
+        <p>
+          <strong>BMI Calculator</strong> is a simple and reliable Android tool made for everyday use. Whether you prefer Metric units (centimeters and kilograms) or Imperial units (feet, inches, and pounds), the app gives you an instant BMI reading along with helpful context—without forcing you to create an account or stay connected to the internet.
+        </p>
+        <div class="callout">
+          <strong>Simple, Private &amp; Offline-First:</strong> All BMI calculations, saved history entries, and preferences stay locally on your phone or tablet.
+        </div>
+      </section>
+
+      <section id="features">
+        <h2>2. Key Features</h2>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <h3>Metric &amp; Imperial Support</h3>
+            <p>Switch easily between Metric (cm, kg) and Imperial (ft/in, lb) on the Calculator screen, or pick your default unit in Settings.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Detailed BMI Result</h3>
+            <p>See your exact BMI score, category badge, visual BMI range indicator bar, healthy weight range for your height, and a weight suggestion.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Optional Age &amp; Gender</h3>
+            <p>Optionally add your age (2–120 years) and gender (Male, Female, or Unspecified) to keep clearer personal records.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Local History Log</h3>
+            <p>Save results when you want, open past entries anytime to review details, delete single items, or clear all history in one tap.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Light, Dark &amp; System Themes</h3>
+            <p>Choose Light, Dark, or follow your phone's System theme with a clean Material Design 3 interface.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Adaptive Layout</h3>
+            <p>Designed cleanly for both phones (bottom navigation bar) and larger screens like tablets (side navigation rail).</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="how-to-use">
+        <h2>3. How the App Works</h2>
+        <ul>
+          <li><strong>Step 1 — Enter Your Measurements:</strong> On the <em>Calculator</em> tab, select <strong>Metric</strong> or <strong>Imperial</strong>, enter your height and weight, and optionally add your age and gender.</li>
+          <li><strong>Step 2 — Check Input Ranges:</strong> The app automatically checks your numbers to help prevent typos:
+            <ul>
+              <li><em>Metric:</em> Height <code>50 – 280 cm</code>, Weight <code>10 – 500 kg</code></li>
+              <li><em>Imperial:</em> Total height <code>20 – 110 in</code> (inches field <code>0 – 11.9</code>), Weight <code>22 – 1100 lb</code></li>
+              <li><em>Age (optional):</em> <code>2 – 120 years</code></li>
+            </ul>
+          </li>
+          <li><strong>Step 3 — View Your Result:</strong> Tap <strong>Calculate BMI</strong> to open the Result screen, where you can review your BMI score, category, healthy weight range, and weight suggestion.</li>
+          <li><strong>Step 4 — Save to History (Optional):</strong> Tap <strong>Save Result</strong> if you want to keep a copy in your on-device <em>History</em> tab.</li>
+        </ul>
+      </section>
+
+      <section id="methodology">
+        <h2>4. BMI Calculation Methodology</h2>
+        <p>
+          BMI Calculator computes your score offline on your device using standard Body Mass Index formulas:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Unit System</th>
+              <th>Formula</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Metric</strong></td>
+              <td><code>BMI = Weight (kg) &divide; Height (m)&sup2;</code></td>
+              <td>Height in centimeters is converted to meters (<code>cm &divide; 100</code>) before squaring.</td>
+            </tr>
+            <tr>
+              <td><strong>Imperial</strong></td>
+              <td><code>BMI = (Weight (lb) &times; 703) &divide; Height (in)&sup2;</code></td>
+              <td>Total height in inches is calculated as <code>(feet &times; 12) + inches</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Standard Adult BMI Categories (Ages 20+)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>BMI Range</th>
+              <th>Category</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Below 18.5</td>
+              <td>Underweight</td>
+            </tr>
+            <tr>
+              <td>18.5 – 24.9</td>
+              <td>Normal</td>
+            </tr>
+            <tr>
+              <td>25.0 – 29.9</td>
+              <td>Overweight</td>
+            </tr>
+            <tr>
+              <td>30.0 – 34.9</td>
+              <td>Obesity Class 1</td>
+            </tr>
+            <tr>
+              <td>35.0 – 39.9</td>
+              <td>Obesity Class 2</td>
+            </tr>
+            <tr>
+              <td>40.0 or above</td>
+              <td>Obesity Class 3</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>Healthy Weight Range:</strong> The healthy weight range shown for your height is calculated by solving the BMI formula for values between <code>18.5</code> and <code>24.9</code>.
+        </p>
+      </section>
+
+      <section id="privacy-storage">
+        <h2>5. Storage, Privacy &amp; Advertising</h2>
+        <ul>
+          <li><strong>On-Device Storage:</strong> Saved BMI records are stored locally in an Android Room SQLite database (<code>bmi_calculator_db</code>), and your theme/unit settings are stored in Jetpack DataStore (<code>bmi_user_preferences</code>).</li>
+          <li><strong>No Account &amp; No Server Uploads:</strong> You do not need to sign up or log in. Your height, weight, age, gender, and BMI history are never uploaded to our servers, and Android cloud backup is disabled (<code>android:allowBackup="false"</code>).</li>
+          <li><strong>Minimal Permissions:</strong> The app only declares <code>INTERNET</code>, <code>ACCESS_NETWORK_STATE</code>, and <code>AD_ID</code> for displaying Start.io banner and periodic interstitial ads when your device is online. It never accesses your camera, location, contacts, microphone, or personal files.</li>
+        </ul>
+      </section>
+
+      <section id="disclaimer">
+        <h2>6. Health &amp; Informational Disclaimer</h2>
+        <p>
+          BMI Calculator is designed for general informational and educational purposes only. BMI is a basic screening indicator and does not directly measure body fat percentage, muscle mass, fat distribution, or bone density.
+        </p>
+        <p>
+          Standard adult BMI categories apply to adults aged 20 and above. Athletes, muscular individuals, older adults, pregnant or nursing individuals, and children or teenagers (who require age- and sex-specific BMI-for-age percentiles) need different clinical interpretation. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment.
+        </p>
+      </section>
+
+      <section id="policies-contact">
+        <h2>7. Policies &amp; Contact</h2>
+        <p>You can read our full legal and privacy documents here:</p>
+        <ul>
+          <li><a href="privicy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms &amp; Conditions</a></li>
+        </ul>
+        <p>
+          Have questions, feedback, or bug reports? Reach out to the developer at:<br />
+          <strong>Email:</strong> <a href="mailto:mushahidsaifee5@gmail.com">mushahidsaifee5@gmail.com</a>
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2026 BMI Calculator. All rights reserved. | <a href="privicy.html">Privacy Policy</a> | <a href="terms.html">Terms &amp; Conditions</a></p>
+    </footer>
+  </div>
+</body>
+</html>
